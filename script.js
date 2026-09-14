@@ -235,6 +235,15 @@ function unlockApp() {
   loginPassword.value = "";
   loginMsg.textContent = "";
 }
+// حماية شاشة الدخول: النقر داخل الحقول أو البطاقة لا يغلق الشاشة.
+loginOverlay.addEventListener("click", (event) => event.stopPropagation());
+document.querySelector(".login-card").addEventListener("click", (event) => event.stopPropagation());
+loginOverlay.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+});
 loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const username = loginUsername.value.trim();
