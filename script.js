@@ -196,6 +196,32 @@ const newProductStock = document.getElementById("newProductStock");
 const newProductBarcode = document.getElementById("newProductBarcode");
 const addProductBtn = document.getElementById("addProductBtn");
 const addProductMsg = document.getElementById("addProductMsg");
+const loginOverlay = document.getElementById("loginOverlay");
+const loginForm = document.getElementById("loginForm");
+const loginUsername = document.getElementById("loginUsername");
+const loginPassword = document.getElementById("loginPassword");
+const loginMsg = document.getElementById("loginMsg");
+
+// دخول التطبيق: الجلسة تنتهي عند إغلاق التطبيق.
+const LOGIN_USERNAME = "admin";
+const LOGIN_PASSWORD = "admin123";
+function unlockApp() {
+  loginOverlay.classList.add("hidden");
+  loginUsername.value = "";
+  loginPassword.value = "";
+  loginMsg.textContent = "";
+}
+loginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (loginUsername.value.trim() === LOGIN_USERNAME && loginPassword.value === LOGIN_PASSWORD) {
+    unlockApp();
+  } else {
+    loginMsg.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
+    loginPassword.value = "";
+    loginPassword.focus();
+  }
+});
+setTimeout(() => loginUsername.focus(), 100);
 
 // ===== التبويبات =====
 function renderTabs() {

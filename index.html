@@ -11,6 +11,23 @@
 </head>
 <body>
 
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card" dir="rtl">
+    <div class="login-brand-mark">ك</div>
+    <h1>نظام كاشير</h1>
+    <p>أدخل اسم المستخدم وكلمة المرور للمتابعة</p>
+    <form id="loginForm" class="login-form">
+      <label for="loginUsername">اسم المستخدم</label>
+      <input id="loginUsername" type="text" autocomplete="username" placeholder="اسم المستخدم" required />
+      <label for="loginPassword">كلمة المرور</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="كلمة المرور" required />
+      <button type="submit" class="btn-primary-small">دخول</button>
+      <div id="loginMsg" class="login-msg"></div>
+    </form>
+    <small>© 2026 Yusuf elbeses — جميع الحقوق محفوظة</small>
+  </div>
+</div>
+
 <header class="site-header no-print">
   <div class="wrap header-inner">
     <div class="brand">
