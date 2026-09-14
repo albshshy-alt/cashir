@@ -17,7 +17,13 @@ const STORE_SUB_KEY = "libraryStoreSub";
 const ADMIN_PASSWORD_KEY = "adminPassword";
 const DEFAULT_ADMIN_PASSWORD = "1234";
 const STOCK_KEY = "kashierProductStock";
+loginOverlay.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
 
+document.querySelector(".login-card").addEventListener("click", (event) => {
+  event.stopPropagation();
+});
 function loadJSON(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
