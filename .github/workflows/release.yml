@@ -25,6 +25,17 @@ jobs:
         run: npm ci
 
       - name: Build and publish Windows installer
-        run: npm run dist:win -- --publish always
+        run: npm run dist:win -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish release assets
+        shell: bash
+        run: |
+          ls -lah release
+          gh release create "${GITHUB_REF_NAME}" release/*.exe release/*.yml release/*.blockmap \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "نظام كاشير ${GITHUB_REF_NAME}" \
+            --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
