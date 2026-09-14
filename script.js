@@ -18,13 +18,6 @@ const ADMIN_PASSWORD_KEY = "adminPassword";
 const DEFAULT_ADMIN_PASSWORD = "1234";
 const ADMIN_PASSWORD_HASH_KEY = "adminPasswordHash";
 const STOCK_KEY = "kashierProductStock";
-loginOverlay.addEventListener("click", (event) => {
-  event.stopPropagation();
-});
-
-document.querySelector(".login-card").addEventListener("click", (event) => {
-  event.stopPropagation();
-});
 function loadJSON(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -236,6 +229,10 @@ const updateNowBtn = document.getElementById("updateNowBtn");
 const updateLaterBtn = document.getElementById("updateLaterBtn");
 const updateProgress = document.getElementById("updateProgress");
 const updateProgressBar = updateProgress?.querySelector("span");
+
+// حماية شاشة الدخول: يجب تسجيل الأحداث بعد تعريف عناصر DOM حتى لا يتوقف التطبيق.
+loginOverlay.addEventListener("click", (event) => event.stopPropagation());
+document.querySelector(".login-card").addEventListener("click", (event) => event.stopPropagation());
 
 const ACCOUNT_KEY = "kashierLocalAccount";
 async function hashPassword(value) {
