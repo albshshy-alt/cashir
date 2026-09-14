@@ -189,6 +189,19 @@ h1,h2,h3,.brand-name{font-family:'Amiri', serif; font-weight:700;}
   font-family:'Tajawal'; font-size:13.5px; cursor:pointer; margin-top:14px;
 }
 .empty-cart{color:#6b5f4f; font-size:14px; text-align:center; padding:30px 0;}
+.reports-panel{max-width:760px;}
+.reports-filters{display:flex; gap:8px; align-items:end; flex-wrap:wrap; margin-bottom:16px;}
+.reports-filters label{display:flex; flex-direction:column; gap:4px; font-size:12px; color:#6b5f4f;}
+.reports-filters input{padding:9px; border:1px solid var(--line); border-radius:5px; background:var(--parchment-2); font-family:inherit;}
+.reports-filters .btn-ghost-small,.reports-filters .btn-primary-small{margin-top:0; padding:9px 12px;}
+.report-summary{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:16px;}
+.report-stat{padding:12px; border:1px solid var(--line); background:var(--parchment-2); border-radius:6px;}
+.report-stat small{display:block; color:#6b5f4f; font-size:11px;}
+.report-stat strong{font-size:18px; color:var(--green-2);}
+.report-products,.report-invoices{border-top:1px dashed var(--line); padding-top:12px; margin-top:12px;}
+.report-table{width:100%; border-collapse:collapse; font-size:12px;}
+.report-table th,.report-table td{padding:7px; border-bottom:1px solid var(--line); text-align:right;}
+.report-table th{color:#6b5f4f;}
 
 @media(max-width:600px){ .cart-panel{max-width:100%;} }
 
@@ -309,12 +322,12 @@ h1,h2,h3,.brand-name{font-family:'Amiri', serif; font-weight:700;}
 .admin-msg.success{ color:#1e7d3a; }
 .admin-msg.error{ color:#b3261e; }
 .admin-products-header{
-  display:grid; grid-template-columns:1.35fr 1fr 0.7fr 0.75fr 1fr auto auto;
+  display:grid; grid-template-columns:1.25fr 0.9fr 0.65fr 0.65fr 0.65fr 0.9fr auto auto;
   gap:6px; font-size:12px; color:#6b5f4f; font-weight:700; padding:0 4px 6px;
 }
 .admin-products-list{ max-height:320px; overflow-y:auto; }
 .admin-product-row{
-  display:grid; grid-template-columns:1.35fr 1fr 0.7fr 0.75fr 1fr auto auto;
+  display:grid; grid-template-columns:1.25fr 0.9fr 0.65fr 0.65fr 0.65fr 0.9fr auto auto;
   gap:6px; align-items:center; padding:6px 4px; border-bottom:1px solid var(--line);
 }
 .admin-product-row input{
@@ -340,4 +353,6 @@ h1,h2,h3,.brand-name{font-family:'Amiri', serif; font-weight:700;}
   body.printing-barcodes .barcode-sheet-area{
     display:block !important; margin:0; padding:10px;
   }
+  body.printing-report .reports-panel{display:block !important; max-width:none; height:auto; padding:20px;}
+  body.printing-report #reportsOverlay{display:block !important; position:static; background:#fff;}
 }

@@ -47,6 +47,7 @@
     </div>
     <div class="header-actions">
       <button id="printBarcodesBtn" class="history-btn">طباعة ملصقات الباركود</button>
+      <button id="reportsBtn" class="history-btn">تقارير المبيعات والأرباح</button>
       <button id="adminBtn" class="history-btn">لوحة الإدارة</button>
       <button id="historyBtn" class="history-btn">الفواتير السابقة</button>
       <button id="cartBtn" class="cart-btn">
@@ -211,7 +212,8 @@
       <div class="admin-form admin-form-grid">
         <input type="text" id="newProductName" placeholder="اسم المنتج" />
         <input type="text" id="newProductCategory" placeholder="التصنيف" />
-        <input type="number" id="newProductPrice" placeholder="السعر" min="0" />
+        <input type="number" id="newProductPrice" placeholder="سعر البيع" min="0" />
+        <input type="number" id="newProductCost" placeholder="سعر التكلفة" min="0" />
         <input type="number" id="newProductStock" placeholder="الكمية المتوفرة (اختياري)" min="0" />
         <input type="text" id="newProductBarcode" placeholder="باركود (اختياري)" autocomplete="off" />
       </div>
@@ -226,7 +228,7 @@
       <h4>تعديل أو حذف المنتجات الحالية</h4>
       <p class="admin-hint">قسم <strong>كمية المنتجات</strong>: اكتب عدد القطع المتوفرة لكل منتج. عند وصول العدد إلى صفر سيتوقف المنتج وتظهر رسالة «انتهت الكمية».</p>
       <div class="admin-products-header">
-        <span>الاسم</span><span>التصنيف</span><span>السعر</span><span>الكمية</span><span>الباركود</span><span></span><span></span>
+        <span>الاسم</span><span>التصنيف</span><span>البيع</span><span>التكلفة</span><span>الكمية</span><span>الباركود</span><span></span><span></span>
       </div>
       <div id="adminProductsList" class="admin-products-list"></div>
     </div>
@@ -244,6 +246,25 @@
       <button id="changePasswordBtn" class="btn-primary-small">تغيير كلمة السر</button>
       <div id="changePasswordMsg" class="admin-msg"></div>
     </div>
+  </div>
+</div>
+
+<!-- تقارير المبيعات والأرباح -->
+<div id="reportsOverlay" class="cart-overlay no-print">
+  <div class="cart-panel reports-panel">
+    <div class="cart-panel-head">
+      <h3>تقارير المبيعات والأرباح</h3>
+      <button id="closeReports" class="close-btn">×</button>
+    </div>
+    <div class="reports-filters">
+      <label>من <input type="date" id="reportFrom" /></label>
+      <label>إلى <input type="date" id="reportTo" /></label>
+      <button id="runReportBtn" class="btn-primary-small">عرض التقرير</button>
+      <button id="printReportBtn" class="btn-ghost-small">طباعة التقرير</button>
+    </div>
+    <div id="reportSummary" class="report-summary"></div>
+    <div id="reportTopProducts" class="report-products"></div>
+    <div id="reportInvoices" class="report-invoices"></div>
   </div>
 </div>
 

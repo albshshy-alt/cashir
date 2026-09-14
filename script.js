@@ -16,6 +16,7 @@ const STORE_NAME_KEY = "libraryStoreName";
 const STORE_SUB_KEY = "libraryStoreSub";
 const ADMIN_PASSWORD_KEY = "adminPassword";
 const DEFAULT_ADMIN_PASSWORD = "1234";
+const ADMIN_PASSWORD_HASH_KEY = "adminPasswordHash";
 const STOCK_KEY = "kashierProductStock";
 loginOverlay.addEventListener("click", (event) => {
   event.stopPropagation();
@@ -57,6 +58,13 @@ function saveStoreSub(value) { localStorage.setItem(STORE_SUB_KEY, value); }
 // ===== كلمة سر لوحة الإدارة =====
 function loadAdminPassword() { return localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_ADMIN_PASSWORD; }
 function saveAdminPassword(value) { localStorage.setItem(ADMIN_PASSWORD_KEY, value); }
+async function verifyAdminPassword(value) {
+  const savedHash = localStorage.getItem(ADMIN_PASSWORD_HASH_KEY);
+  const account = loadAccount();
+  if (savedHash) return savedHash === await hashPassword(value);
+  if (account?.passwordHash) return account.passwordHash === await hashPassword(value);
+  return value === loadAdminPassword();
+}
 
 function applyStoreIdentity() {
   const name = loadStoreName();
@@ -198,10 +206,21 @@ const adminProductsList = document.getElementById("adminProductsList");
 const newProductName = document.getElementById("newProductName");
 const newProductCategory = document.getElementById("newProductCategory");
 const newProductPrice = document.getElementById("newProductPrice");
+const newProductCost = document.getElementById("newProductCost");
 const newProductStock = document.getElementById("newProductStock");
 const newProductBarcode = document.getElementById("newProductBarcode");
 const addProductBtn = document.getElementById("addProductBtn");
 const addProductMsg = document.getElementById("addProductMsg");
+const reportsBtn = document.getElementById("reportsBtn");
+const reportsOverlay = document.getElementById("reportsOverlay");
+const closeReports = document.getElementById("closeReports");
+const reportFrom = document.getElementById("reportFrom");
+const reportTo = document.getElementById("reportTo");
+const runReportBtn = document.getElementById("runReportBtn");
+const printReportBtn = document.getElementById("printReportBtn");
+const reportSummary = document.getElementById("reportSummary");
+const reportTopProducts = document.getElementById("reportTopProducts");
+const reportInvoices = document.getElementById("reportInvoices");
 const loginOverlay = document.getElementById("loginOverlay");
 const loginForm = document.getElementById("loginForm");
 const loginUsername = document.getElementById("loginUsername");
@@ -543,7 +562,7 @@ function fillInvoiceDOM(invoice) {
 
 function buildInvoiceFromCart() {
   const items = Object.values(cart).map(i => ({
-    name: i.name, qty: i.qty, price: i.price
+    name: i.name, qty: i.qty, price: i.price, cost: Number(i.cost) || 0
   }));
   const subtotal = getCartSubtotal();
   const discountAmount = getDiscountAmount(subtotal);
@@ -568,6 +587,34 @@ function buildInvoiceFromCart() {
 
   fillInvoiceDOM(invoice);
   return invoice;
+}
+
+function getInvoiceCost(invoice) {
+  return (invoice.items || []).reduce((sum, item) => sum + (Number(item.cost) || 0) * (Number(item.qty) || 0), 0);
+}
+function dateKey(timestamp) {
+  const date = new Date(timestamp);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+function renderReports() {
+  const from = reportFrom.value || "0000-01-01";
+  const to = reportTo.value || "9999-12-31";
+  const invoices = loadHistory().filter(inv => { const day = dateKey(inv.timestamp); return day >= from && day <= to; });
+  const sales = invoices.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
+  const cost = invoices.reduce((sum, inv) => sum + getInvoiceCost(inv), 0);
+  const discount = invoices.reduce((sum, inv) => sum + (Number(inv.discountAmount) || 0), 0);
+  const profit = sales - cost;
+  const quantity = invoices.reduce((sum, inv) => sum + (inv.items || []).reduce((n, item) => n + (Number(item.qty) || 0), 0), 0);
+  const top = {};
+  invoices.forEach(inv => (inv.items || []).forEach(item => {
+    if (!top[item.name]) top[item.name] = { qty: 0, sales: 0 };
+    top[item.name].qty += Number(item.qty) || 0;
+    top[item.name].sales += (Number(item.qty) || 0) * (Number(item.price) || 0);
+  }));
+  const topRows = Object.entries(top).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
+  reportSummary.innerHTML = [["إجمالي الفواتير", invoices.length], ["القطع المباعة", quantity], ["صافي المبيعات", `${sales} ل.س`], ["الخصومات", `${discount} ل.س`], ["تكلفة المنتجات", `${cost} ل.س`], ["صافي الربح", `${profit} ل.س`]].map(([label, value]) => `<div class="report-stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
+  reportTopProducts.innerHTML = `<h4>الأكثر مبيعًا</h4>${topRows.length ? `<table class="report-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>المبيعات</th></tr></thead><tbody>${topRows.map(([name, data]) => `<tr><td>${name}</td><td>${data.qty}</td><td>${data.sales} ل.س</td></tr>`).join("")}</tbody></table>` : `<p class="history-empty">لا توجد مبيعات في الفترة المحددة.</p>`}`;
+  reportInvoices.innerHTML = `<h4>الفواتير المشمولة: ${invoices.length}</h4>`;
 }
 
 function completeSaleAndDeductStock() {
@@ -778,6 +825,25 @@ printBarcodesBtn.addEventListener("click", () => {
 });
 window.addEventListener("afterprint", () => {
   document.body.classList.remove("printing-barcodes");
+  document.body.classList.remove("printing-report");
+});
+
+reportsBtn.addEventListener("click", () => {
+  const today = dateKey(Date.now());
+  if (!reportFrom.value) reportFrom.value = today;
+  if (!reportTo.value) reportTo.value = today;
+  renderReports();
+  reportsOverlay.classList.add("open");
+});
+closeReports.addEventListener("click", () => reportsOverlay.classList.remove("open"));
+reportsOverlay.addEventListener("click", (event) => {
+  if (event.target === reportsOverlay) reportsOverlay.classList.remove("open");
+});
+runReportBtn.addEventListener("click", renderReports);
+printReportBtn.addEventListener("click", () => {
+  renderReports();
+  document.body.classList.add("printing-report");
+  window.print();
 });
 
 // ===== لوحة الإدارة =====
@@ -852,6 +918,7 @@ function renderAdminProductsList() {
         <input type="text" class="ap-name" value="${p.name}" />
         <input type="text" class="ap-category" value="${p.category}" />
         <input type="number" class="ap-price" value="${p.price}" min="0" />
+        <input type="number" class="ap-cost" value="${Number(p.cost) || 0}" min="0" />
         <input type="number" class="ap-stock" value="${getStock(p) ?? ""}" min="0" placeholder="غير محدد" />
         <span class="ap-barcode">${p.barcode}</span>
         <button class="ap-save">حفظ</button>
@@ -869,25 +936,26 @@ adminProductsList.addEventListener("click", (e) => {
     const name = row.querySelector(".ap-name").value.trim();
     const category = row.querySelector(".ap-category").value.trim();
     const price = Number(row.querySelector(".ap-price").value);
+    const cost = Number(row.querySelector(".ap-cost").value);
     const stockInput = row.querySelector(".ap-stock").value.trim();
     const stock = stockInput === "" ? null : Number(stockInput);
-    if (!name || !category || !Number.isFinite(price) || price < 0 || (stock !== null && (!Number.isFinite(stock) || stock < 0))) {
+    if (!name || !category || !Number.isFinite(price) || price < 0 || !Number.isFinite(cost) || cost < 0 || cost > price || (stock !== null && (!Number.isFinite(stock) || stock < 0))) {
       addProductMsg.textContent = "⚠️ تأكد من تعبئة الاسم والتصنيف والسعر بشكل صحيح";
       addProductMsg.className = "admin-msg error";
       return;
     }
     const product = products.find(p => p.id === id);
-    Object.assign(product, { name, category, price });
+    Object.assign(product, { name, category, price, cost });
     if (stock === null) delete productStock[String(id)];
     else setStock(product, stock);
     if (stock === null) saveStock(productStock);
 
     if (id < FIRST_CUSTOM_ID) {
-      productOverrides[id] = { ...(productOverrides[id] || {}), name, category, price };
+      productOverrides[id] = { ...(productOverrides[id] || {}), name, category, price, cost };
       saveOverrides(productOverrides);
     } else {
       const cp = customProducts.find(p => p.id === id);
-      if (cp) { Object.assign(cp, { name, category, price }); saveCustomProducts(customProducts); }
+      if (cp) { Object.assign(cp, { name, category, price, cost }); saveCustomProducts(customProducts); }
     }
 
     rebuildCategories();
@@ -932,17 +1000,18 @@ addProductBtn.addEventListener("click", () => {
   const name = newProductName.value.trim();
   const category = newProductCategory.value.trim();
   const price = Number(newProductPrice.value);
+  const cost = Number(newProductCost.value);
   const stockInput = newProductStock.value.trim();
   const stock = stockInput === "" ? null : Number(stockInput);
   const rawBarcode = newProductBarcode.value.trim();
 
-  if (!name || !category || !Number.isFinite(price) || price < 0 || (stock !== null && (!Number.isFinite(stock) || stock < 0))) {
+  if (!name || !category || !Number.isFinite(price) || price < 0 || !Number.isFinite(cost) || cost < 0 || cost > price || (stock !== null && (!Number.isFinite(stock) || stock < 0))) {
     addProductMsg.textContent = "⚠️ تأكد من تعبئة الاسم والتصنيف والسعر بشكل صحيح";
     addProductMsg.className = "admin-msg error";
     return;
   }
 
-  const newProduct = { id: nextCustomId(), name, category, price };
+  const newProduct = { id: nextCustomId(), name, category, price, cost };
   if (stock !== null) {
     newProductStock.value = String(Math.floor(stock));
     productStock[String(newProduct.id)] = Math.floor(stock);
@@ -976,6 +1045,7 @@ addProductBtn.addEventListener("click", () => {
   newProductName.value = "";
   newProductCategory.value = "";
   newProductPrice.value = "";
+  newProductCost.value = "";
   newProductStock.value = "";
   newProductBarcode.value = "";
   addProductMsg.textContent = `✅ تمت إضافة المنتج: ${name}`;
@@ -1004,8 +1074,8 @@ adminBtn.addEventListener("click", () => {
   setTimeout(() => adminPasswordInput.focus(), 50);
 });
 
-function trySubmitPassword() {
-  if (adminPasswordInput.value === loadAdminPassword()) {
+async function trySubmitPassword() {
+  if (await verifyAdminPassword(adminPasswordInput.value)) {
     passwordOverlay.classList.remove("open");
     openAdminPanel();
   } else {
@@ -1025,20 +1095,21 @@ passwordOverlay.addEventListener("click", (e) => {
   if (e.target === passwordOverlay) passwordOverlay.classList.remove("open");
 });
 
-changePasswordBtn.addEventListener("click", () => {
+changePasswordBtn.addEventListener("click", async () => {
   const current = currentPasswordInput.value;
   const next = newPasswordInput.value.trim();
-  if (current !== loadAdminPassword()) {
+  if (!(await verifyAdminPassword(current))) {
     changePasswordMsg.textContent = "❌ كلمة السر الحالية غير صحيحة";
     changePasswordMsg.className = "admin-msg error";
     return;
   }
-  if (!next) {
+  if (next.length < 6) {
     changePasswordMsg.textContent = "❌ اكتب كلمة سر جديدة";
     changePasswordMsg.className = "admin-msg error";
     return;
   }
-  saveAdminPassword(next);
+  localStorage.setItem(ADMIN_PASSWORD_HASH_KEY, await hashPassword(next));
+  localStorage.removeItem(ADMIN_PASSWORD_KEY);
   currentPasswordInput.value = "";
   newPasswordInput.value = "";
   changePasswordMsg.textContent = "✅ تم تغيير كلمة السر بنجاح";
