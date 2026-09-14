@@ -48,17 +48,6 @@ function saveStoreName(value) { localStorage.setItem(STORE_NAME_KEY, value); }
 function loadStoreSub() { return localStorage.getItem(STORE_SUB_KEY) || ""; }
 function saveStoreSub(value) { localStorage.setItem(STORE_SUB_KEY, value); }
 
-// ===== كلمة سر لوحة الإدارة =====
-function loadAdminPassword() { return localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_ADMIN_PASSWORD; }
-function saveAdminPassword(value) { localStorage.setItem(ADMIN_PASSWORD_KEY, value); }
-async function verifyAdminPassword(value) {
-  const savedHash = localStorage.getItem(ADMIN_PASSWORD_HASH_KEY);
-  const account = loadAccount();
-  if (savedHash) return savedHash === await hashPassword(value);
-  if (account?.passwordHash) return account.passwordHash === await hashPassword(value);
-  return value === loadAdminPassword();
-}
-
 function applyStoreIdentity() {
   const name = loadStoreName();
   const sub = loadStoreSub();
@@ -175,15 +164,6 @@ const barcodeSheetGrid = document.getElementById("barcodeSheetGrid");
 // عناصر لوحة الإدارة
 const adminBtn = document.getElementById("adminBtn");
 const adminOverlay = document.getElementById("adminOverlay");
-const passwordOverlay = document.getElementById("passwordOverlay");
-const closePassword = document.getElementById("closePassword");
-const adminPasswordInput = document.getElementById("adminPasswordInput");
-const submitPasswordBtn = document.getElementById("submitPasswordBtn");
-const passwordMsg = document.getElementById("passwordMsg");
-const currentPasswordInput = document.getElementById("currentPasswordInput");
-const newPasswordInput = document.getElementById("newPasswordInput");
-const changePasswordBtn = document.getElementById("changePasswordBtn");
-const changePasswordMsg = document.getElementById("changePasswordMsg");
 const storeNameInput = document.getElementById("storeNameInput");
 const storeSubInput = document.getElementById("storeSubInput");
 const saveStoreNameBtn = document.getElementById("saveStoreNameBtn");
@@ -991,60 +971,10 @@ function openAdminPanel() {
   storeNameInput.value = loadStoreName();
   storeSubInput.value = loadStoreSub();
   storeNameMsg.textContent = "";
-  currentPasswordInput.value = "";
-  newPasswordInput.value = "";
-  changePasswordMsg.textContent = "";
   adminOverlay.classList.add("open");
 }
 
-adminBtn.addEventListener("click", () => {
-  adminPasswordInput.value = "";
-  passwordMsg.textContent = "";
-  passwordOverlay.classList.add("open");
-  setTimeout(() => adminPasswordInput.focus(), 50);
-});
-
-async function trySubmitPassword() {
-  if (await verifyAdminPassword(adminPasswordInput.value)) {
-    passwordOverlay.classList.remove("open");
-    openAdminPanel();
-  } else {
-    passwordMsg.textContent = "❌ كلمة السر غير صحيحة";
-    passwordMsg.className = "admin-msg error";
-    adminPasswordInput.value = "";
-    adminPasswordInput.focus();
-  }
-}
-
-submitPasswordBtn.addEventListener("click", trySubmitPassword);
-adminPasswordInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") trySubmitPassword();
-});
-closePassword.addEventListener("click", () => passwordOverlay.classList.remove("open"));
-passwordOverlay.addEventListener("click", (e) => {
-  if (e.target === passwordOverlay) passwordOverlay.classList.remove("open");
-});
-
-changePasswordBtn.addEventListener("click", async () => {
-  const current = currentPasswordInput.value;
-  const next = newPasswordInput.value.trim();
-  if (!(await verifyAdminPassword(current))) {
-    changePasswordMsg.textContent = "❌ كلمة السر الحالية غير صحيحة";
-    changePasswordMsg.className = "admin-msg error";
-    return;
-  }
-  if (next.length < 6) {
-    changePasswordMsg.textContent = "❌ اكتب كلمة سر جديدة";
-    changePasswordMsg.className = "admin-msg error";
-    return;
-  }
-  localStorage.setItem(ADMIN_PASSWORD_HASH_KEY, await hashPassword(next));
-  localStorage.removeItem(ADMIN_PASSWORD_KEY);
-  currentPasswordInput.value = "";
-  newPasswordInput.value = "";
-  changePasswordMsg.textContent = "✅ تم تغيير كلمة السر بنجاح";
-  changePasswordMsg.className = "admin-msg success";
-});
+adminBtn.addEventListener("click", openAdminPanel);
 saveStoreNameBtn.addEventListener("click", () => {
   saveStoreName(storeNameInput.value.trim());
   saveStoreSub(storeSubInput.value.trim());

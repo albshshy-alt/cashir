@@ -136,24 +136,6 @@
   </div>
 </div>
 
-<!-- شاشة كلمة السر -->
-<div id="passwordOverlay" class="cart-overlay no-print">
-  <div class="cart-panel admin-panel" style="max-width:340px;">
-    <div class="cart-panel-head">
-      <h3>دخول لوحة الإدارة</h3>
-      <button id="closePassword" class="close-btn">×</button>
-    </div>
-    <div class="admin-section">
-      <p class="admin-hint">اكتب كلمة السر للدخول إلى لوحة الإدارة.</p>
-      <div class="admin-form" style="flex-direction:column;">
-        <input type="password" id="adminPasswordInput" placeholder="كلمة السر" autocomplete="off" style="width:100%;" />
-        <button id="submitPasswordBtn" class="btn-primary-small" style="width:100%;">دخول</button>
-      </div>
-      <div id="passwordMsg" class="admin-msg"></div>
-    </div>
-  </div>
-</div>
-
 <!-- لوحة الإدارة -->
 <div id="adminOverlay" class="cart-overlay no-print">
   <div class="cart-panel admin-panel">
@@ -219,17 +201,6 @@
 
     <hr class="admin-divider" />
 
-    <!-- قسم 4: تغيير كلمة السر -->
-    <div class="admin-section">
-      <h4>تغيير كلمة سر لوحة الإدارة</h4>
-      <p class="admin-hint">كلمة السر الحالية: يجب كتابتها لتأكيد التغيير.</p>
-      <div class="admin-form-grid">
-        <input type="password" id="currentPasswordInput" placeholder="كلمة السر الحالية" autocomplete="off" />
-        <input type="password" id="newPasswordInput" placeholder="كلمة السر الجديدة" autocomplete="off" />
-      </div>
-      <button id="changePasswordBtn" class="btn-primary-small">تغيير كلمة السر</button>
-      <div id="changePasswordMsg" class="admin-msg"></div>
-    </div>
   </div>
 </div>
 
