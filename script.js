@@ -201,10 +201,34 @@ const loginForm = document.getElementById("loginForm");
 const loginUsername = document.getElementById("loginUsername");
 const loginPassword = document.getElementById("loginPassword");
 const loginMsg = document.getElementById("loginMsg");
+const loginIntro = document.getElementById("loginIntro");
+const loginConfirmLabel = document.getElementById("loginConfirmLabel");
+const loginConfirmPassword = document.getElementById("loginConfirmPassword");
+const updateBanner = document.getElementById("updateBanner");
+const updateTitle = document.getElementById("updateTitle");
+const updateMessage = document.getElementById("updateMessage");
+const updateNowBtn = document.getElementById("updateNowBtn");
+const updateLaterBtn = document.getElementById("updateLaterBtn");
+const updateProgress = document.getElementById("updateProgress");
+const updateProgressBar = updateProgress?.querySelector("span");
 
-// دخول التطبيق: الجلسة تنتهي عند إغلاق التطبيق.
-const LOGIN_USERNAME = "admin";
-const LOGIN_PASSWORD = "admin123";
+const ACCOUNT_KEY = "kashierLocalAccount";
+async function hashPassword(value) {
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+function loadAccount() { return loadJSON(ACCOUNT_KEY, null); }
+function showLoginMode() {
+  const setup = !loadAccount();
+  loginIntro.textContent = setup ? "أنشئ حساب المستخدم الأول على هذا الكمبيوتر" : "أدخل بيانات الدخول للمتابعة";
+  loginUsername.placeholder = setup ? "أنشئ اسم المستخدم" : "اسم المستخدم";
+  loginPassword.placeholder = setup ? "أنشئ كلمة المرور" : "كلمة المرور";
+  loginPassword.autocomplete = setup ? "new-password" : "current-password";
+  loginConfirmLabel.hidden = !setup;
+  loginConfirmPassword.hidden = !setup;
+  loginConfirmPassword.required = setup;
+}
 function unlockApp() {
   loginOverlay.classList.add("hidden");
   loginUsername.value = "";
@@ -213,15 +237,54 @@ function unlockApp() {
 }
 loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (loginUsername.value.trim() === LOGIN_USERNAME && loginPassword.value === LOGIN_PASSWORD) {
-    unlockApp();
-  } else {
-    loginMsg.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
-    loginPassword.value = "";
-    loginPassword.focus();
-  }
+  const username = loginUsername.value.trim();
+  const password = loginPassword.value;
+  const account = loadAccount();
+  if (!username || password.length < 6) { loginMsg.textContent = "استخدم اسم مستخدم وكلمة مرور من 6 أحرف على الأقل"; return; }
+  hashPassword(password).then(hash => {
+    if (!account) {
+      if (password !== loginConfirmPassword.value) { loginMsg.textContent = "تأكيد كلمة المرور غير مطابق"; return; }
+      saveJSON(ACCOUNT_KEY, { username, passwordHash: hash });
+      unlockApp();
+    } else if (account.username === username && account.passwordHash === hash) {
+      unlockApp();
+    } else {
+      loginMsg.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
+      loginPassword.value = "";
+      loginPassword.focus();
+    }
+  });
 });
+showLoginMode();
 setTimeout(() => loginUsername.focus(), 100);
+
+// إشعار التحديث داخل واجهة التطبيق.
+if (window.desktopUpdater) {
+  window.desktopUpdater.onAvailable(({ version }) => {
+    updateTitle.textContent = "يتوفر تحديث جديد";
+    updateMessage.textContent = `الإصدار ${version} جاهز. اضغط تحديث الآن لتنزيله وتثبيته تلقائيًا.`;
+    updateBanner.hidden = false;
+  });
+  window.desktopUpdater.onProgress(({ percent }) => {
+    updateProgress.hidden = false;
+    updateNowBtn.disabled = true;
+    updateNowBtn.textContent = `جارٍ التحديث ${Math.round(percent)}%`;
+    if (updateProgressBar) updateProgressBar.style.width = `${percent}%`;
+  });
+  window.desktopUpdater.onDownloaded(() => {
+    updateTitle.textContent = "اكتمل تنزيل التحديث";
+    updateMessage.textContent = "اضغط موافق لإعادة تشغيل التطبيق وتطبيق التحديث.";
+    updateNowBtn.disabled = false;
+    updateNowBtn.textContent = "موافق وإعادة التشغيل";
+    updateNowBtn.onclick = () => window.desktopUpdater.install();
+  });
+  window.desktopUpdater.onError(() => {
+    updateMessage.textContent = "تعذر تنزيل التحديث حاليًا. حاول لاحقًا.";
+    updateNowBtn.disabled = false;
+  });
+  updateNowBtn.onclick = () => window.desktopUpdater.download();
+  updateLaterBtn.addEventListener("click", () => { updateBanner.hidden = true; });
+}
 
 // ===== التبويبات =====
 function renderTabs() {

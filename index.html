@@ -15,17 +15,25 @@
   <div class="login-card" dir="rtl">
     <div class="login-brand-mark">ك</div>
     <h1>نظام كاشير</h1>
-    <p>أدخل اسم المستخدم وكلمة المرور للمتابعة</p>
+    <p id="loginIntro">أنشئ حساب المستخدم الأول على هذا الكمبيوتر</p>
     <form id="loginForm" class="login-form">
       <label for="loginUsername">اسم المستخدم</label>
-      <input id="loginUsername" type="text" autocomplete="username" placeholder="اسم المستخدم" required />
+      <input id="loginUsername" type="text" autocomplete="username" placeholder="أنشئ اسم المستخدم" required />
       <label for="loginPassword">كلمة المرور</label>
-      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="كلمة المرور" required />
+      <input id="loginPassword" type="password" autocomplete="new-password" placeholder="أنشئ كلمة المرور" required />
+      <label id="loginConfirmLabel" for="loginConfirmPassword">تأكيد كلمة المرور</label>
+      <input id="loginConfirmPassword" type="password" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور" required />
       <button type="submit" class="btn-primary-small">دخول</button>
       <div id="loginMsg" class="login-msg"></div>
     </form>
     <small>© 2026 Yusuf elbeses — جميع الحقوق محفوظة</small>
   </div>
+</div>
+
+<div id="updateBanner" class="update-banner" hidden>
+  <div><strong id="updateTitle">يتوفر تحديث جديد</strong><span id="updateMessage">يوجد تحديث جديد لنظام كاشير.</span></div>
+  <div class="update-actions"><button id="updateNowBtn" class="btn-primary-small">تحديث الآن</button><button id="updateLaterBtn" class="btn-ghost-small">لاحقًا</button></div>
+  <div id="updateProgress" class="update-progress" hidden><span></span></div>
 </div>
 
 <header class="site-header no-print">
