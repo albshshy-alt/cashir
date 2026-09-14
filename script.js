@@ -1070,7 +1070,13 @@ clearCartBtn.addEventListener("click", () => {
   discountTypeSelect.value = "percent";
   updateCartUI();
 });
+loginOverlay.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
 
+document.querySelector(".login-card").addEventListener("click", (event) => {
+  event.stopPropagation();
+});
 discountValueInput.addEventListener("input", updateCartUI);
 discountTypeSelect.addEventListener("change", updateCartUI);
 
