@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self';">
+<title id="pageTitle"></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header no-print">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <div class="brand-mark" id="brandMark"></div>
+      <div>
+        <div class="brand-name" id="brandName"></div>
+        <div class="brand-sub" id="brandSub"></div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="printBarcodesBtn" class="history-btn">طباعة ملصقات الباركود</button>
+      <button id="adminBtn" class="history-btn">لوحة الإدارة</button>
+      <button id="historyBtn" class="history-btn">الفواتير السابقة</button>
+      <button id="cartBtn" class="cart-btn">
+        سلة المشتريات <span id="cartCount">0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="page-head no-print">
+  <div class="wrap">
+    <div class="kicker">قائمة الأسعار</div>
+    <h1>كل ما تحتاجه للمدرسة والمنزل والمناسبات</h1>
+    <p>اختر المنتجات، أضفها للسلة، واطبع فاتورتك مباشرة.</p>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج..." />
+      <div class="tabs" id="tabs"></div>
+    </div>
+
+    <div class="barcode-box">
+      <label for="barcodeInput">📷 وضع مسح الباركود — وصّل الهاتف بالكمبيوتر عبر USB وابدأ المسح، ستُضاف المنتجات هنا تلقائيًا إلى السلة</label>
+      <input type="text" id="barcodeInput" placeholder="اضغط هنا ثم ابدأ المسح من الهاتف..." autocomplete="off" />
+    </div>
+  </div>
+</section>
+
+<main class="wrap no-print">
+  <div id="catalog"></div>
+</main>
+
+<footer class="site-footer no-print">
+  <div class="wrap">
+    <p id="footerLine">الأسعار قابلة للتغيير دون إشعار مسبق.</p>
+    <p class="copyright-notice">© 2026 Yusuf elbeses — جميع الحقوق محفوظة. يمنع نسخ أو إعادة توزيع هذا التطبيق دون إذن.</p>
+  </div>
+</footer>
+
+<!-- سلة المشتريات -->
+<div id="cartOverlay" class="cart-overlay no-print">
+  <div class="cart-panel">
+    <div class="cart-panel-head">
+      <h3>سلة المشتريات</h3>
+      <button id="closeCart" class="close-btn">×</button>
+    </div>
+
+    <div id="cartItems" class="cart-items"></div>
+
+    <div class="discount-field">
+      <label for="discountValue">حسم الفاتورة (اختياري)</label>
+      <div class="discount-row">
+        <input type="number" id="discountValue" min="0" placeholder="0" />
+        <select id="discountType">
+          <option value="percent">%</option>
+          <option value="amount">ل.س</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <div class="cart-summary-row">
+        <span>المجموع الفرعي</span>
+        <span id="cartSubtotal">0 ل.س</span>
+      </div>
+      <div class="cart-summary-row discount-line" id="cartDiscountRow">
+        <span>الحسم</span>
+        <span id="cartDiscountAmount">0 ل.س</span>
+      </div>
+      <div class="cart-total">
+        <span>المجموع</span>
+        <strong id="cartTotal">0 ل.س</strong>
+      </div>
+    </div>
+
+    <div class="customer-field">
+      <label for="customerName">اسم الزبون (اختياري)</label>
+      <input type="text" id="customerName" placeholder="مثال: أبو محمد" />
+    </div>
+
+    <div class="cart-actions">
+      <button id="printInvoiceBtn" class="btn-primary-small">طباعة الفاتورة</button>
+      <button id="clearCart" class="btn-ghost-small">تفريغ السلة</button>
+    </div>
+  </div>
+</div>
+
+<!-- قائمة الفواتير السابقة -->
+<div id="historyOverlay" class="cart-overlay no-print">
+  <div class="cart-panel">
+    <div class="cart-panel-head">
+      <h3>الفواتير السابقة</h3>
+      <button id="closeHistory" class="close-btn">×</button>
+    </div>
+
+    <div class="history-search">
+      <input type="text" id="historySearch" placeholder="ابحث باسم الزبون أو رقم الفاتورة..." />
+    </div>
+
+    <div id="historyList" class="history-list"></div>
+
+    <button id="clearHistory" class="btn-ghost-small">حذف كل السجل</button>
+  </div>
+</div>
+
+<!-- شاشة كلمة السر -->
+<div id="passwordOverlay" class="cart-overlay no-print">
+  <div class="cart-panel admin-panel" style="max-width:340px;">
+    <div class="cart-panel-head">
+      <h3>دخول لوحة الإدارة</h3>
+      <button id="closePassword" class="close-btn">×</button>
+    </div>
+    <div class="admin-section">
+      <p class="admin-hint">اكتب كلمة السر للدخول إلى لوحة الإدارة.</p>
+      <div class="admin-form" style="flex-direction:column;">
+        <input type="password" id="adminPasswordInput" placeholder="كلمة السر" autocomplete="off" style="width:100%;" />
+        <button id="submitPasswordBtn" class="btn-primary-small" style="width:100%;">دخول</button>
+      </div>
+      <div id="passwordMsg" class="admin-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- لوحة الإدارة -->
+<div id="adminOverlay" class="cart-overlay no-print">
+  <div class="cart-panel admin-panel">
+    <div class="cart-panel-head">
+      <h3>لوحة الإدارة</h3>
+      <button id="closeAdmin" class="close-btn">×</button>
+    </div>
+
+    <!-- قسم 0: اسم المحل -->
+    <div class="admin-section">
+      <h4>اسم المحل</h4>
+      <p class="admin-hint">اكتب اسم المحل والعنوان الفرعي (مثل اسم المدينة أو الحي). سيظهر الاسم في أعلى الموقع وفي الفاتورة.</p>
+      <div class="admin-form">
+        <input type="text" id="storeNameInput" placeholder="اسم المحل" autocomplete="off" />
+        <input type="text" id="storeSubInput" placeholder="العنوان الفرعي (اختياري)" autocomplete="off" />
+        <button id="saveStoreNameBtn" class="btn-primary-small">حفظ الاسم</button>
+      </div>
+      <div id="storeNameMsg" class="admin-msg"></div>
+    </div>
+
+    <hr class="admin-divider" />
+
+    <!-- قسم 1: إضافة باركود -->
+    <div class="admin-section">
+      <h4>إضافة باركود لمنتج</h4>
+      <p class="admin-hint">اختر المنتج، ثم اكتب رقم الباركود (باركود الشركة أو أي رقم تريده) واضغط حفظ.</p>
+      <div class="admin-form">
+        <select id="assignBarcodeSelect"></select>
+        <input type="text" id="assignBarcodeValue" placeholder="رقم الباركود..." autocomplete="off" />
+        <button id="assignBarcodeBtn" class="btn-primary-small">حفظ الباركود</button>
+      </div>
+      <div id="assignBarcodeMsg" class="admin-msg"></div>
+    </div>
+
+    <hr class="admin-divider" />
+
+    <!-- قسم 2: إضافة منتج جديد -->
+    <div class="admin-section">
+      <h4>إضافة منتج جديد</h4>
+      <div class="admin-form admin-form-grid">
+        <input type="text" id="newProductName" placeholder="اسم المنتج" />
+        <input type="text" id="newProductCategory" placeholder="التصنيف" />
+        <input type="number" id="newProductPrice" placeholder="السعر" min="0" />
+        <input type="number" id="newProductStock" placeholder="الكمية المتوفرة (اختياري)" min="0" />
+        <input type="text" id="newProductBarcode" placeholder="باركود (اختياري)" autocomplete="off" />
+      </div>
+      <button id="addProductBtn" class="btn-primary-small">إضافة المنتج</button>
+      <div id="addProductMsg" class="admin-msg"></div>
+    </div>
+
+    <hr class="admin-divider" />
+
+    <!-- قسم 3: تعديل/حذف المنتجات الحالية -->
+    <div class="admin-section">
+      <h4>تعديل أو حذف المنتجات الحالية</h4>
+      <p class="admin-hint">قسم <strong>كمية المنتجات</strong>: اكتب عدد القطع المتوفرة لكل منتج. عند وصول العدد إلى صفر سيتوقف المنتج وتظهر رسالة «انتهت الكمية».</p>
+      <div class="admin-products-header">
+        <span>الاسم</span><span>التصنيف</span><span>السعر</span><span>الكمية</span><span>الباركود</span><span></span><span></span>
+      </div>
+      <div id="adminProductsList" class="admin-products-list"></div>
+    </div>
+
+    <hr class="admin-divider" />
+
+    <!-- قسم 4: تغيير كلمة السر -->
+    <div class="admin-section">
+      <h4>تغيير كلمة سر لوحة الإدارة</h4>
+      <p class="admin-hint">كلمة السر الحالية: يجب كتابتها لتأكيد التغيير.</p>
+      <div class="admin-form-grid">
+        <input type="password" id="currentPasswordInput" placeholder="كلمة السر الحالية" autocomplete="off" />
+        <input type="password" id="newPasswordInput" placeholder="كلمة السر الجديدة" autocomplete="off" />
+      </div>
+      <button id="changePasswordBtn" class="btn-primary-small">تغيير كلمة السر</button>
+      <div id="changePasswordMsg" class="admin-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- الفاتورة القابلة للطباعة -->
+<div id="invoiceArea" class="invoice-area">
+  <div class="invoice-header">
+    <div class="invoice-brand">
+      <div class="invoice-mark" id="invoiceMark"></div>
+      <div>
+        <h2 id="invoiceBrandName"></h2>
+        <span id="invoiceBrandSub"></span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div><span>رقم الفاتورة:</span> <b id="invNumber"></b></div>
+      <div><span>التاريخ:</span> <b id="invDate"></b></div>
+      <div><span>الزبون:</span> <b id="invCustomer">—</b></div>
+    </div>
+  </div>
+
+  <table class="invoice-table">
+    <thead>
+      <tr>
+        <th>المنتج</th>
+        <th>الكمية</th>
+        <th>السعر</th>
+        <th>الإجمالي</th>
+      </tr>
+    </thead>
+    <tbody id="invoiceBody"></tbody>
+  </table>
+
+  <div class="invoice-summary">
+    <div class="invoice-summary-col">
+      <div class="invoice-summary-row">
+        <span>المجموع الفرعي</span>
+        <b id="invSubtotal">0 ل.س</b>
+      </div>
+      <div class="invoice-summary-row" id="invDiscountRow">
+        <span id="invDiscountLabel">الحسم</span>
+        <b id="invDiscountAmount">0 ل.س</b>
+      </div>
+      <div class="invoice-summary-row invoice-summary-total">
+        <span>المجموع الكلي</span>
+        <b id="invTotal">0 ل.س</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="invoice-footer">
+    <p id="invoiceThanksLine">شكرًا لتعاملكم معنا</p>
+  </div>
+</div>
+
+<!-- تنبيه المسح -->
+<div id="scanToast" class="scan-toast"></div>
+
+<!-- ملصقات الباركود القابلة للطباعة -->
+<div id="barcodeSheetArea" class="barcode-sheet-area">
+  <div id="barcodeSheetGrid" class="barcode-sheet-grid"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
