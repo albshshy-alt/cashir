@@ -14,10 +14,7 @@ const NEXT_CUSTOM_ID_KEY = "nasrLibraryNextCustomId";
 const FIRST_CUSTOM_ID = 100000; // أكبر بكثير من عدد منتجات القائمة الأساسية لتفادي أي تعارض
 const STORE_NAME_KEY = "libraryStoreName";
 const STORE_SUB_KEY = "libraryStoreSub";
-const ADMIN_PASSWORD_KEY = "adminPassword";
-const DEFAULT_ADMIN_PASSWORD = "1234";
-const ADMIN_PASSWORD_HASH_KEY = "adminPasswordHash";
-const STOCK_KEY = "kashierProductStock";
+
 function loadJSON(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -25,39 +22,12 @@ function loadJSON(key, fallback) {
   } catch { return fallback; }
 }
 function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-function loadStock() { return loadJSON(STOCK_KEY, {}); }
-function saveStock(value) { saveJSON(STOCK_KEY, value); }
-let productStock = loadStock(); // id -> non-negative quantity; missing key means not tracked
-function getStock(product) {
-  const value = productStock[String(product.id)];
-  return Number.isFinite(Number(value)) && Number(value) >= 0 ? Number(value) : null;
-}
-function setStock(product, value) {
-  const qty = Math.max(0, Math.floor(Number(value) || 0));
-  productStock[String(product.id)] = qty;
-  saveStock(productStock);
-}
-function stockLabel(product) {
-  const stock = getStock(product);
-  return stock === null ? "الكمية: غير محددة" : stock === 0 ? "انتهت الكمية" : `المتوفر: ${stock}`;
-}
 
 // ===== اسم المحل (قابل للتغيير من لوحة الإدارة) =====
 function loadStoreName() { return localStorage.getItem(STORE_NAME_KEY) || ""; }
 function saveStoreName(value) { localStorage.setItem(STORE_NAME_KEY, value); }
 function loadStoreSub() { return localStorage.getItem(STORE_SUB_KEY) || ""; }
 function saveStoreSub(value) { localStorage.setItem(STORE_SUB_KEY, value); }
-
-// ===== كلمة سر لوحة الإدارة =====
-function loadAdminPassword() { return localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_ADMIN_PASSWORD; }
-function saveAdminPassword(value) { localStorage.setItem(ADMIN_PASSWORD_KEY, value); }
-async function verifyAdminPassword(value) {
-  const savedHash = localStorage.getItem(ADMIN_PASSWORD_HASH_KEY);
-  const account = loadAccount();
-  if (savedHash) return savedHash === await hashPassword(value);
-  if (account?.passwordHash) return account.passwordHash === await hashPassword(value);
-  return value === loadAdminPassword();
-}
 
 function applyStoreIdentity() {
   const name = loadStoreName();
@@ -175,15 +145,6 @@ const barcodeSheetGrid = document.getElementById("barcodeSheetGrid");
 // عناصر لوحة الإدارة
 const adminBtn = document.getElementById("adminBtn");
 const adminOverlay = document.getElementById("adminOverlay");
-const passwordOverlay = document.getElementById("passwordOverlay");
-const closePassword = document.getElementById("closePassword");
-const adminPasswordInput = document.getElementById("adminPasswordInput");
-const submitPasswordBtn = document.getElementById("submitPasswordBtn");
-const passwordMsg = document.getElementById("passwordMsg");
-const currentPasswordInput = document.getElementById("currentPasswordInput");
-const newPasswordInput = document.getElementById("newPasswordInput");
-const changePasswordBtn = document.getElementById("changePasswordBtn");
-const changePasswordMsg = document.getElementById("changePasswordMsg");
 const storeNameInput = document.getElementById("storeNameInput");
 const storeSubInput = document.getElementById("storeSubInput");
 const saveStoreNameBtn = document.getElementById("saveStoreNameBtn");
@@ -199,123 +160,9 @@ const adminProductsList = document.getElementById("adminProductsList");
 const newProductName = document.getElementById("newProductName");
 const newProductCategory = document.getElementById("newProductCategory");
 const newProductPrice = document.getElementById("newProductPrice");
-const newProductCost = document.getElementById("newProductCost");
-const newProductStock = document.getElementById("newProductStock");
 const newProductBarcode = document.getElementById("newProductBarcode");
 const addProductBtn = document.getElementById("addProductBtn");
 const addProductMsg = document.getElementById("addProductMsg");
-const reportsBtn = document.getElementById("reportsBtn");
-const reportsOverlay = document.getElementById("reportsOverlay");
-const closeReports = document.getElementById("closeReports");
-const reportFrom = document.getElementById("reportFrom");
-const reportTo = document.getElementById("reportTo");
-const runReportBtn = document.getElementById("runReportBtn");
-const printReportBtn = document.getElementById("printReportBtn");
-const reportSummary = document.getElementById("reportSummary");
-const reportTopProducts = document.getElementById("reportTopProducts");
-const reportInvoices = document.getElementById("reportInvoices");
-const loginOverlay = document.getElementById("loginOverlay");
-const loginForm = document.getElementById("loginForm");
-const loginUsername = document.getElementById("loginUsername");
-const loginPassword = document.getElementById("loginPassword");
-const loginMsg = document.getElementById("loginMsg");
-const loginIntro = document.getElementById("loginIntro");
-const loginConfirmLabel = document.getElementById("loginConfirmLabel");
-const loginConfirmPassword = document.getElementById("loginConfirmPassword");
-const updateBanner = document.getElementById("updateBanner");
-const updateTitle = document.getElementById("updateTitle");
-const updateMessage = document.getElementById("updateMessage");
-const updateNowBtn = document.getElementById("updateNowBtn");
-const updateLaterBtn = document.getElementById("updateLaterBtn");
-const updateProgress = document.getElementById("updateProgress");
-const updateProgressBar = updateProgress?.querySelector("span");
-
-// حماية شاشة الدخول: يجب تسجيل الأحداث بعد تعريف عناصر DOM حتى لا يتوقف التطبيق.
-loginOverlay.addEventListener("click", (event) => event.stopPropagation());
-document.querySelector(".login-card").addEventListener("click", (event) => event.stopPropagation());
-
-const ACCOUNT_KEY = "kashierLocalAccount";
-async function hashPassword(value) {
-  const data = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
-function loadAccount() { return loadJSON(ACCOUNT_KEY, null); }
-function showLoginMode() {
-  const setup = !loadAccount();
-  loginIntro.textContent = setup ? "أنشئ حساب المستخدم الأول على هذا الكمبيوتر" : "أدخل بيانات الدخول للمتابعة";
-  loginUsername.placeholder = setup ? "أنشئ اسم المستخدم" : "اسم المستخدم";
-  loginPassword.placeholder = setup ? "أنشئ كلمة المرور" : "كلمة المرور";
-  loginPassword.autocomplete = setup ? "new-password" : "current-password";
-  loginConfirmLabel.hidden = !setup;
-  loginConfirmPassword.hidden = !setup;
-  loginConfirmPassword.required = setup;
-}
-function unlockApp() {
-  loginOverlay.classList.add("hidden");
-  loginUsername.value = "";
-  loginPassword.value = "";
-  loginMsg.textContent = "";
-}
-// حماية شاشة الدخول: النقر داخل الحقول أو البطاقة لا يغلق الشاشة.
-loginOverlay.addEventListener("click", (event) => event.stopPropagation());
-document.querySelector(".login-card").addEventListener("click", (event) => event.stopPropagation());
-loginOverlay.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-});
-loginForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const username = loginUsername.value.trim();
-  const password = loginPassword.value;
-  const account = loadAccount();
-  if (!username || password.length < 6) { loginMsg.textContent = "استخدم اسم مستخدم وكلمة مرور من 6 أحرف على الأقل"; return; }
-  hashPassword(password).then(hash => {
-    if (!account) {
-      if (password !== loginConfirmPassword.value) { loginMsg.textContent = "تأكيد كلمة المرور غير مطابق"; return; }
-      saveJSON(ACCOUNT_KEY, { username, passwordHash: hash });
-      unlockApp();
-    } else if (account.username === username && account.passwordHash === hash) {
-      unlockApp();
-    } else {
-      loginMsg.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
-      loginPassword.value = "";
-      loginPassword.focus();
-    }
-  });
-});
-showLoginMode();
-setTimeout(() => loginUsername.focus(), 100);
-
-// إشعار التحديث داخل واجهة التطبيق.
-if (window.desktopUpdater) {
-  window.desktopUpdater.onAvailable(({ version }) => {
-    updateTitle.textContent = "يتوفر تحديث جديد";
-    updateMessage.textContent = `الإصدار ${version} جاهز. اضغط تحديث الآن لتنزيله وتثبيته تلقائيًا.`;
-    updateBanner.hidden = false;
-  });
-  window.desktopUpdater.onProgress(({ percent }) => {
-    updateProgress.hidden = false;
-    updateNowBtn.disabled = true;
-    updateNowBtn.textContent = `جارٍ التحديث ${Math.round(percent)}%`;
-    if (updateProgressBar) updateProgressBar.style.width = `${percent}%`;
-  });
-  window.desktopUpdater.onDownloaded(() => {
-    updateTitle.textContent = "اكتمل تنزيل التحديث";
-    updateMessage.textContent = "اضغط موافق لإعادة تشغيل التطبيق وتطبيق التحديث.";
-    updateNowBtn.disabled = false;
-    updateNowBtn.textContent = "موافق وإعادة التشغيل";
-    updateNowBtn.onclick = () => window.desktopUpdater.install();
-  });
-  window.desktopUpdater.onError(() => {
-    updateMessage.textContent = "تعذر تنزيل التحديث حاليًا. حاول لاحقًا.";
-    updateNowBtn.disabled = false;
-  });
-  updateNowBtn.onclick = () => window.desktopUpdater.download();
-  updateLaterBtn.addEventListener("click", () => { updateBanner.hidden = true; });
-}
 
 // ===== التبويبات =====
 function renderTabs() {
@@ -358,13 +205,12 @@ function renderCatalog() {
       <h2>${cat}</h2>
       <div class="cat-grid">
         ${items.map(p => `
-          <div class="product-card ${getStock(p) === 0 ? "out-of-stock" : ""}">
+          <div class="product-card">
             <h4>${p.name}</h4>
             ${p.note ? `<div class="product-note">${p.note}</div>` : ""}
-            <div class="stock-status ${getStock(p) === 0 ? "stock-empty" : ""}">${stockLabel(p)}</div>
             <div class="product-bottom">
               <span class="price">${p.price} ل.س</span>
-              <button class="add-btn" data-id="${p.id}" ${getStock(p) === 0 ? "disabled" : ""}>${getStock(p) === 0 ? "انتهت الكمية" : "أضف"}</button>
+              <button class="add-btn" data-id="${p.id}">أضف</button>
             </div>
           </div>
         `).join("")}
@@ -389,12 +235,6 @@ function renderCatalog() {
 function addToCart(id) {
   const product = products.find(p => p.id === id);
   if (!product) return;
-  const stock = getStock(product);
-  const currentQty = cart[id]?.qty || 0;
-  if (stock === 0 || (stock !== null && currentQty >= stock)) {
-    showScanToast(`انتهت الكمية المتوفرة من: ${product.name}`, "error");
-    return;
-  }
   if (cart[id]) {
     cart[id].qty += 1;
   } else {
@@ -405,12 +245,6 @@ function addToCart(id) {
 
 function changeQty(id, delta) {
   if (!cart[id]) return;
-  const product = products.find(p => p.id === id);
-  const stock = product ? getStock(product) : null;
-  if (delta > 0 && stock !== null && cart[id].qty >= stock) {
-    showScanToast(`لا يمكن تجاوز الكمية المتوفرة من: ${product.name}`, "error");
-    return;
-  }
   cart[id].qty += delta;
   if (cart[id].qty <= 0) delete cart[id];
   updateCartUI();
@@ -559,7 +393,7 @@ function fillInvoiceDOM(invoice) {
 
 function buildInvoiceFromCart() {
   const items = Object.values(cart).map(i => ({
-    name: i.name, qty: i.qty, price: i.price, cost: Number(i.cost) || 0
+    name: i.name, qty: i.qty, price: i.price
   }));
   const subtotal = getCartSubtotal();
   const discountAmount = getDiscountAmount(subtotal);
@@ -586,60 +420,13 @@ function buildInvoiceFromCart() {
   return invoice;
 }
 
-function getInvoiceCost(invoice) {
-  return (invoice.items || []).reduce((sum, item) => sum + (Number(item.cost) || 0) * (Number(item.qty) || 0), 0);
-}
-function dateKey(timestamp) {
-  const date = new Date(timestamp);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-function renderReports() {
-  const from = reportFrom.value || "0000-01-01";
-  const to = reportTo.value || "9999-12-31";
-  const invoices = loadHistory().filter(inv => { const day = dateKey(inv.timestamp); return day >= from && day <= to; });
-  const sales = invoices.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0);
-  const cost = invoices.reduce((sum, inv) => sum + getInvoiceCost(inv), 0);
-  const discount = invoices.reduce((sum, inv) => sum + (Number(inv.discountAmount) || 0), 0);
-  const profit = sales - cost;
-  const quantity = invoices.reduce((sum, inv) => sum + (inv.items || []).reduce((n, item) => n + (Number(item.qty) || 0), 0), 0);
-  const top = {};
-  invoices.forEach(inv => (inv.items || []).forEach(item => {
-    if (!top[item.name]) top[item.name] = { qty: 0, sales: 0 };
-    top[item.name].qty += Number(item.qty) || 0;
-    top[item.name].sales += (Number(item.qty) || 0) * (Number(item.price) || 0);
-  }));
-  const topRows = Object.entries(top).sort((a, b) => b[1].qty - a[1].qty).slice(0, 10);
-  reportSummary.innerHTML = [["إجمالي الفواتير", invoices.length], ["القطع المباعة", quantity], ["صافي المبيعات", `${sales} ل.س`], ["الخصومات", `${discount} ل.س`], ["تكلفة المنتجات", `${cost} ل.س`], ["صافي الربح", `${profit} ل.س`]].map(([label, value]) => `<div class="report-stat"><small>${label}</small><strong>${value}</strong></div>`).join("");
-  reportTopProducts.innerHTML = `<h4>الأكثر مبيعًا</h4>${topRows.length ? `<table class="report-table"><thead><tr><th>المنتج</th><th>الكمية</th><th>المبيعات</th></tr></thead><tbody>${topRows.map(([name, data]) => `<tr><td>${name}</td><td>${data.qty}</td><td>${data.sales} ل.س</td></tr>`).join("")}</tbody></table>` : `<p class="history-empty">لا توجد مبيعات في الفترة المحددة.</p>`}`;
-  reportInvoices.innerHTML = `<h4>الفواتير المشمولة: ${invoices.length}</h4>`;
-}
-
-function completeSaleAndDeductStock() {
-  const nextStock = { ...productStock };
-  for (const item of Object.values(cart)) {
-    const stock = getStock(item);
-    if (stock !== null && item.qty > stock) {
-      alert(`الكمية المطلوبة من "${item.name}" أكبر من المتوفر (${stock}).`);
-      return false;
-    }
-    if (stock !== null) nextStock[String(item.id)] = stock - item.qty;
-  }
-  productStock = nextStock;
-  saveStock(productStock);
-  return true;
-}
-
 printInvoiceBtn.addEventListener("click", () => {
   if (Object.keys(cart).length === 0) {
     alert("السلة فارغة، أضف منتجات أولاً.");
     return;
   }
   const invoice = buildInvoiceFromCart();
-  if (!completeSaleAndDeductStock()) return;
   addInvoiceToHistory(invoice);
-  cart = {};
-  updateCartUI();
-  renderCatalog();
   window.print();
 });
 
@@ -822,25 +609,6 @@ printBarcodesBtn.addEventListener("click", () => {
 });
 window.addEventListener("afterprint", () => {
   document.body.classList.remove("printing-barcodes");
-  document.body.classList.remove("printing-report");
-});
-
-reportsBtn.addEventListener("click", () => {
-  const today = dateKey(Date.now());
-  if (!reportFrom.value) reportFrom.value = today;
-  if (!reportTo.value) reportTo.value = today;
-  renderReports();
-  reportsOverlay.classList.add("open");
-});
-closeReports.addEventListener("click", () => reportsOverlay.classList.remove("open"));
-reportsOverlay.addEventListener("click", (event) => {
-  if (event.target === reportsOverlay) reportsOverlay.classList.remove("open");
-});
-runReportBtn.addEventListener("click", renderReports);
-printReportBtn.addEventListener("click", () => {
-  renderReports();
-  document.body.classList.add("printing-report");
-  window.print();
 });
 
 // ===== لوحة الإدارة =====
@@ -915,8 +683,6 @@ function renderAdminProductsList() {
         <input type="text" class="ap-name" value="${p.name}" />
         <input type="text" class="ap-category" value="${p.category}" />
         <input type="number" class="ap-price" value="${p.price}" min="0" />
-        <input type="number" class="ap-cost" value="${Number(p.cost) || 0}" min="0" />
-        <input type="number" class="ap-stock" value="${getStock(p) ?? ""}" min="0" placeholder="غير محدد" />
         <span class="ap-barcode">${p.barcode}</span>
         <button class="ap-save">حفظ</button>
         <button class="ap-delete">حذف</button>
@@ -933,26 +699,20 @@ adminProductsList.addEventListener("click", (e) => {
     const name = row.querySelector(".ap-name").value.trim();
     const category = row.querySelector(".ap-category").value.trim();
     const price = Number(row.querySelector(".ap-price").value);
-    const cost = Number(row.querySelector(".ap-cost").value);
-    const stockInput = row.querySelector(".ap-stock").value.trim();
-    const stock = stockInput === "" ? null : Number(stockInput);
-    if (!name || !category || !Number.isFinite(price) || price < 0 || !Number.isFinite(cost) || cost < 0 || cost > price || (stock !== null && (!Number.isFinite(stock) || stock < 0))) {
+    if (!name || !category || !Number.isFinite(price) || price < 0) {
       addProductMsg.textContent = "⚠️ تأكد من تعبئة الاسم والتصنيف والسعر بشكل صحيح";
       addProductMsg.className = "admin-msg error";
       return;
     }
     const product = products.find(p => p.id === id);
-    Object.assign(product, { name, category, price, cost });
-    if (stock === null) delete productStock[String(id)];
-    else setStock(product, stock);
-    if (stock === null) saveStock(productStock);
+    Object.assign(product, { name, category, price });
 
     if (id < FIRST_CUSTOM_ID) {
-      productOverrides[id] = { ...(productOverrides[id] || {}), name, category, price, cost };
+      productOverrides[id] = { ...(productOverrides[id] || {}), name, category, price };
       saveOverrides(productOverrides);
     } else {
       const cp = customProducts.find(p => p.id === id);
-      if (cp) { Object.assign(cp, { name, category, price, cost }); saveCustomProducts(customProducts); }
+      if (cp) { Object.assign(cp, { name, category, price }); saveCustomProducts(customProducts); }
     }
 
     rebuildCategories();
@@ -971,8 +731,6 @@ adminProductsList.addEventListener("click", (e) => {
 
     products = products.filter(p => p.id !== id);
     delete barcodeMapNormalized[normalizeBarcode(product.barcode)];
-    delete productStock[String(id)];
-    saveStock(productStock);
 
     if (id < FIRST_CUSTOM_ID) {
       deletedProductIds.push(id);
@@ -997,23 +755,15 @@ addProductBtn.addEventListener("click", () => {
   const name = newProductName.value.trim();
   const category = newProductCategory.value.trim();
   const price = Number(newProductPrice.value);
-  const cost = Number(newProductCost.value);
-  const stockInput = newProductStock.value.trim();
-  const stock = stockInput === "" ? null : Number(stockInput);
   const rawBarcode = newProductBarcode.value.trim();
 
-  if (!name || !category || !Number.isFinite(price) || price < 0 || !Number.isFinite(cost) || cost < 0 || cost > price || (stock !== null && (!Number.isFinite(stock) || stock < 0))) {
+  if (!name || !category || !Number.isFinite(price) || price < 0) {
     addProductMsg.textContent = "⚠️ تأكد من تعبئة الاسم والتصنيف والسعر بشكل صحيح";
     addProductMsg.className = "admin-msg error";
     return;
   }
 
-  const newProduct = { id: nextCustomId(), name, category, price, cost };
-  if (stock !== null) {
-    newProductStock.value = String(Math.floor(stock));
-    productStock[String(newProduct.id)] = Math.floor(stock);
-    saveStock(productStock);
-  }
+  const newProduct = { id: nextCustomId(), name, category, price };
 
   if (rawBarcode) {
     const code = normalizeBarcode(rawBarcode);
@@ -1042,14 +792,12 @@ addProductBtn.addEventListener("click", () => {
   newProductName.value = "";
   newProductCategory.value = "";
   newProductPrice.value = "";
-  newProductCost.value = "";
-  newProductStock.value = "";
   newProductBarcode.value = "";
   addProductMsg.textContent = `✅ تمت إضافة المنتج: ${name}`;
   addProductMsg.className = "admin-msg success";
 });
 
-function openAdminPanel() {
+adminBtn.addEventListener("click", () => {
   fillAssignBarcodeSelect();
   fillCategoryDatalist();
   renderAdminProductsList();
@@ -1058,59 +806,7 @@ function openAdminPanel() {
   storeNameInput.value = loadStoreName();
   storeSubInput.value = loadStoreSub();
   storeNameMsg.textContent = "";
-  currentPasswordInput.value = "";
-  newPasswordInput.value = "";
-  changePasswordMsg.textContent = "";
   adminOverlay.classList.add("open");
-}
-
-adminBtn.addEventListener("click", () => {
-  adminPasswordInput.value = "";
-  passwordMsg.textContent = "";
-  passwordOverlay.classList.add("open");
-  setTimeout(() => adminPasswordInput.focus(), 50);
-});
-
-async function trySubmitPassword() {
-  if (await verifyAdminPassword(adminPasswordInput.value)) {
-    passwordOverlay.classList.remove("open");
-    openAdminPanel();
-  } else {
-    passwordMsg.textContent = "❌ كلمة السر غير صحيحة";
-    passwordMsg.className = "admin-msg error";
-    adminPasswordInput.value = "";
-    adminPasswordInput.focus();
-  }
-}
-
-submitPasswordBtn.addEventListener("click", trySubmitPassword);
-adminPasswordInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") trySubmitPassword();
-});
-closePassword.addEventListener("click", () => passwordOverlay.classList.remove("open"));
-passwordOverlay.addEventListener("click", (e) => {
-  if (e.target === passwordOverlay) passwordOverlay.classList.remove("open");
-});
-
-changePasswordBtn.addEventListener("click", async () => {
-  const current = currentPasswordInput.value;
-  const next = newPasswordInput.value.trim();
-  if (!(await verifyAdminPassword(current))) {
-    changePasswordMsg.textContent = "❌ كلمة السر الحالية غير صحيحة";
-    changePasswordMsg.className = "admin-msg error";
-    return;
-  }
-  if (next.length < 6) {
-    changePasswordMsg.textContent = "❌ اكتب كلمة سر جديدة";
-    changePasswordMsg.className = "admin-msg error";
-    return;
-  }
-  localStorage.setItem(ADMIN_PASSWORD_HASH_KEY, await hashPassword(next));
-  localStorage.removeItem(ADMIN_PASSWORD_KEY);
-  currentPasswordInput.value = "";
-  newPasswordInput.value = "";
-  changePasswordMsg.textContent = "✅ تم تغيير كلمة السر بنجاح";
-  changePasswordMsg.className = "admin-msg success";
 });
 saveStoreNameBtn.addEventListener("click", () => {
   saveStoreName(storeNameInput.value.trim());
@@ -1138,13 +834,7 @@ clearCartBtn.addEventListener("click", () => {
   discountTypeSelect.value = "percent";
   updateCartUI();
 });
-loginOverlay.addEventListener("click", (event) => {
-  event.stopPropagation();
-});
 
-document.querySelector(".login-card").addEventListener("click", (event) => {
-  event.stopPropagation();
-});
 discountValueInput.addEventListener("input", updateCartUI);
 discountTypeSelect.addEventListener("change", updateCartUI);
 

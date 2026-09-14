@@ -3,38 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title id="pageTitle"></title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div id="loginOverlay" class="login-overlay">
-  <div class="login-card" dir="rtl">
-    <div class="login-brand-mark">ك</div>
-    <h1>نظام كاشير</h1>
-    <p id="loginIntro">أنشئ حساب المستخدم الأول على هذا الكمبيوتر</p>
-    <form id="loginForm" class="login-form">
-      <label for="loginUsername">اسم المستخدم</label>
-      <input id="loginUsername" type="text" autocomplete="username" placeholder="أنشئ اسم المستخدم" required />
-      <label for="loginPassword">كلمة المرور</label>
-      <input id="loginPassword" type="password" autocomplete="new-password" placeholder="أنشئ كلمة المرور" required />
-      <label id="loginConfirmLabel" for="loginConfirmPassword">تأكيد كلمة المرور</label>
-      <input id="loginConfirmPassword" type="password" autocomplete="new-password" placeholder="أعد كتابة كلمة المرور" required />
-      <button type="submit" class="btn-primary-small">دخول</button>
-      <div id="loginMsg" class="login-msg"></div>
-    </form>
-    <small>© 2026 Yusuf elbeses — جميع الحقوق محفوظة</small>
-  </div>
-</div>
-
-<div id="updateBanner" class="update-banner" hidden>
-  <div><strong id="updateTitle">يتوفر تحديث جديد</strong><span id="updateMessage">يوجد تحديث جديد لنظام كاشير.</span></div>
-  <div class="update-actions"><button id="updateNowBtn" class="btn-primary-small">تحديث الآن</button><button id="updateLaterBtn" class="btn-ghost-small">لاحقًا</button></div>
-  <div id="updateProgress" class="update-progress" hidden><span></span></div>
-</div>
 
 <header class="site-header no-print">
   <div class="wrap header-inner">
@@ -47,7 +21,6 @@
     </div>
     <div class="header-actions">
       <button id="printBarcodesBtn" class="history-btn">طباعة ملصقات الباركود</button>
-      <button id="reportsBtn" class="history-btn">تقارير المبيعات والأرباح</button>
       <button id="adminBtn" class="history-btn">لوحة الإدارة</button>
       <button id="historyBtn" class="history-btn">الفواتير السابقة</button>
       <button id="cartBtn" class="cart-btn">
@@ -82,7 +55,7 @@
 <footer class="site-footer no-print">
   <div class="wrap">
     <p id="footerLine">الأسعار قابلة للتغيير دون إشعار مسبق.</p>
-    <p class="copyright-notice">© 2026 Yusuf elbeses — جميع الحقوق محفوظة. يمنع نسخ أو إعادة توزيع هذا التطبيق دون إذن.</p>
+    <p class="copyright-notice">© 2026 Yusuf elbeses — جميع الحقوق محفوظة.</p>
   </div>
 </footer>
 
@@ -152,24 +125,6 @@
   </div>
 </div>
 
-<!-- شاشة كلمة السر -->
-<div id="passwordOverlay" class="cart-overlay no-print">
-  <div class="cart-panel admin-panel" style="max-width:340px;">
-    <div class="cart-panel-head">
-      <h3>دخول لوحة الإدارة</h3>
-      <button id="closePassword" class="close-btn">×</button>
-    </div>
-    <div class="admin-section">
-      <p class="admin-hint">اكتب كلمة السر للدخول إلى لوحة الإدارة.</p>
-      <div class="admin-form" style="flex-direction:column;">
-        <input type="password" id="adminPasswordInput" placeholder="كلمة السر" autocomplete="off" style="width:100%;" />
-        <button id="submitPasswordBtn" class="btn-primary-small" style="width:100%;">دخول</button>
-      </div>
-      <div id="passwordMsg" class="admin-msg"></div>
-    </div>
-  </div>
-</div>
-
 <!-- لوحة الإدارة -->
 <div id="adminOverlay" class="cart-overlay no-print">
   <div class="cart-panel admin-panel">
@@ -212,9 +167,7 @@
       <div class="admin-form admin-form-grid">
         <input type="text" id="newProductName" placeholder="اسم المنتج" />
         <input type="text" id="newProductCategory" placeholder="التصنيف" />
-        <input type="number" id="newProductPrice" placeholder="سعر البيع" min="0" />
-        <input type="number" id="newProductCost" placeholder="سعر التكلفة" min="0" />
-        <input type="number" id="newProductStock" placeholder="الكمية المتوفرة (اختياري)" min="0" />
+        <input type="number" id="newProductPrice" placeholder="السعر" min="0" />
         <input type="text" id="newProductBarcode" placeholder="باركود (اختياري)" autocomplete="off" />
       </div>
       <button id="addProductBtn" class="btn-primary-small">إضافة المنتج</button>
@@ -225,46 +178,12 @@
 
     <!-- قسم 3: تعديل/حذف المنتجات الحالية -->
     <div class="admin-section">
-      <h4>تعديل أو حذف المنتجات الحالية</h4>
-      <p class="admin-hint">قسم <strong>كمية المنتجات</strong>: اكتب عدد القطع المتوفرة لكل منتج. عند وصول العدد إلى صفر سيتوقف المنتج وتظهر رسالة «انتهت الكمية».</p>
+      <h4>تعديل أو حذف المنتجات</h4>
       <div class="admin-products-header">
-        <span>الاسم</span><span>التصنيف</span><span>البيع</span><span>التكلفة</span><span>الكمية</span><span>الباركود</span><span></span><span></span>
+        <span>الاسم</span><span>التصنيف</span><span>السعر</span><span>الباركود</span><span></span><span></span>
       </div>
       <div id="adminProductsList" class="admin-products-list"></div>
     </div>
-
-    <hr class="admin-divider" />
-
-    <!-- قسم 4: تغيير كلمة السر -->
-    <div class="admin-section">
-      <h4>تغيير كلمة سر لوحة الإدارة</h4>
-      <p class="admin-hint">كلمة السر الحالية: يجب كتابتها لتأكيد التغيير.</p>
-      <div class="admin-form-grid">
-        <input type="password" id="currentPasswordInput" placeholder="كلمة السر الحالية" autocomplete="off" />
-        <input type="password" id="newPasswordInput" placeholder="كلمة السر الجديدة" autocomplete="off" />
-      </div>
-      <button id="changePasswordBtn" class="btn-primary-small">تغيير كلمة السر</button>
-      <div id="changePasswordMsg" class="admin-msg"></div>
-    </div>
-  </div>
-</div>
-
-<!-- تقارير المبيعات والأرباح -->
-<div id="reportsOverlay" class="cart-overlay no-print">
-  <div class="cart-panel reports-panel">
-    <div class="cart-panel-head">
-      <h3>تقارير المبيعات والأرباح</h3>
-      <button id="closeReports" class="close-btn">×</button>
-    </div>
-    <div class="reports-filters">
-      <label>من <input type="date" id="reportFrom" /></label>
-      <label>إلى <input type="date" id="reportTo" /></label>
-      <button id="runReportBtn" class="btn-primary-small">عرض التقرير</button>
-      <button id="printReportBtn" class="btn-ghost-small">طباعة التقرير</button>
-    </div>
-    <div id="reportSummary" class="report-summary"></div>
-    <div id="reportTopProducts" class="report-products"></div>
-    <div id="reportInvoices" class="report-invoices"></div>
   </div>
 </div>
 
