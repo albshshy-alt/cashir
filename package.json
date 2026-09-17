@@ -1,6 +1,6 @@
 {
   "name": "shop-app-desktop",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "تطبيق إدارة ومبيعات المتجر باللغة العربية",
   "main": "main.js",
   "author": "Yusuf elbeses",
@@ -30,6 +30,12 @@
       "COPYRIGHT-Yusuf-elbeses.txt",
       "icon.*",
       "icon-source.png"
+    ],
+    "extraResources": [
+      {
+        "from": "release-updater/Update-Cashier-win-x64.exe",
+        "to": "Update-Cashier-win-x64.exe"
+      }
     ],
     "directories": {
       "output": "release"

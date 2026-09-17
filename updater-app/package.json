@@ -1,6 +1,6 @@
 {
   "name": "cashier-updater",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "تحديثات تطبيق نظام Cashier",
   "main": "updater-main.js",
   "author": "Yusuf elbeses",

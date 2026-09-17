@@ -24,13 +24,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build and publish Windows installer
-        run: npm run dist:win -- --publish never
+      - name: Build standalone Cashier updater
+        run: npm run dist:updater -- --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build standalone Cashier updater
-        run: npm run dist:updater -- --publish never
+      - name: Build and publish Windows installer
+        run: npm run dist:win -- --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -3,9 +3,11 @@ const { spawn } = require('child_process');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const API_URL = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
 const DIRECT_APP_FALLBACK = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/wxyvwakUIOTUwzkO.exe';
+const DIRECT_APP_FALLBACK_SHA256 = 'c6683b24d256627fa6677a73697ff20015d0a6b49ac55bb788c058a155ab288d';
 let win;
 
 function page(message, progress = '') {
@@ -46,15 +48,35 @@ function download(url, destination, onProgress) {
   });
 }
 
+function sha256File(filePath) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha256');
+    const input = fs.createReadStream(filePath);
+    input.on('data', chunk => hash.update(chunk));
+    input.on('error', reject);
+    input.on('end', () => resolve(hash.digest('hex')));
+  });
+}
+
+function normalizedHash(value) {
+  const hash = String(value || '').toLowerCase().replace(/^sha256:/, '');
+  return /^[a-f0-9]{64}$/.test(hash) ? hash : '';
+}
+
 async function run() {
   win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page('جارٍ البحث عن آخر إصدار آمن...'))}`);
   try {
     let downloadUrl = DIRECT_APP_FALLBACK;
+    let expectedHash = DIRECT_APP_FALLBACK_SHA256;
     let version = 'الأحدث';
     try {
       const release = await requestJson(API_URL);
       const asset = (release.assets || []).find(item => item.name.endsWith('.exe') && item.name.startsWith('Shop-App-'));
-      if (asset?.browser_download_url) { downloadUrl = asset.browser_download_url; version = release.tag_name || version; }
+      if (asset?.browser_download_url) {
+        downloadUrl = asset.browser_download_url;
+        expectedHash = normalizedHash(asset.digest) || expectedHash;
+        version = release.tag_name || version;
+      }
     } catch {}
 
     const destination = path.join(app.getPath('temp'), `Shop-App-${version.replace(/[^0-9.]/g, '') || 'latest'}-win-x64.exe`);
@@ -65,15 +87,25 @@ async function run() {
       });
     } catch (primaryError) {
       if (downloadUrl === DIRECT_APP_FALLBACK) throw primaryError;
+      downloadUrl = DIRECT_APP_FALLBACK;
+      expectedHash = DIRECT_APP_FALLBACK_SHA256;
       await download(DIRECT_APP_FALLBACK, destination, percent => {
         win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`جارٍ تنزيل الإصدار الاحتياطي... ${percent}%`, `${percent}%`))}`);
       });
     }
-    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page('اكتمل التنزيل. جارٍ تشغيل التثبيت...','100%'))}`);
+
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page('جارٍ التحقق التشفيري من سلامة الملف...','100%'))}`);
+    const actualHash = await sha256File(destination);
+    if (!expectedHash || actualHash !== expectedHash) {
+      try { fs.unlinkSync(destination); } catch {}
+      throw new Error('فشل التحقق من SHA-256؛ تم رفض الملف لحماية جهازك');
+    }
+
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page('تم التحقق من سلامة الملف. جارٍ تشغيل التثبيت...','100%'))}`);
     spawn(destination, [], { detached: true, stdio: 'ignore' }).unref();
     setTimeout(() => app.quit(), 1200);
   } catch (error) {
-    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`تعذر إكمال التحديث: ${error.message}. أغلق النافذة وحاول مرة أخرى.`))}`);
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`تعذر إكمال التحديث: ${error.message}. لم يتم تشغيل أي ملف غير موثوق.`))}`);
   }
 }
 

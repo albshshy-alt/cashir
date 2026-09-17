@@ -8,6 +8,7 @@ const APP_ORIGIN = 'file://';
 const SECURE_STORE_FILE = path.join(app.getPath('userData'), 'cashier-secure-store.json');
 const GITHUB_LATEST_API = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
 const UPDATER_RELEASE_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/VrDSMHpRYHGHlIOW.exe';
+const BUNDLED_UPDATER_PATH = path.join(process.resourcesPath, 'Update-Cashier-win-x64.exe');
 let mainWindow;
 
 function readSecureStore() {
@@ -41,7 +42,7 @@ function checkMandatoryUpdate() {
       try {
         const latest = JSON.parse(body).tag_name;
         if (latest && isNewerVersion(latest, app.getVersion())) {
-          mainWindow?.webContents.send('updater:required', { version: latest, updaterUrl: UPDATER_RELEASE_URL });
+          mainWindow?.webContents.send('updater:required', { version: latest, updaterUrl: app.isPackaged ? 'bundled-updater' : UPDATER_RELEASE_URL });
         }
       } catch {}
     });
@@ -81,7 +82,8 @@ app.whenReady().then(() => {
     callback({ cancel: !details.url.startsWith(APP_ORIGIN) });
   });
   ipcMain.on('updater:open-external', (_event, url) => {
-    if (url === UPDATER_RELEASE_URL) shell.openExternal(url);
+    if (url === 'bundled-updater' && fs.existsSync(BUNDLED_UPDATER_PATH)) shell.openPath(BUNDLED_UPDATER_PATH);
+    else if (url === UPDATER_RELEASE_URL) shell.openExternal(url);
   });
   ipcMain.handle('secure-storage:load', () => readSecureStore());
   ipcMain.handle('secure-storage:save', (_event, values) => { writeSecureStore(values); return true; });
