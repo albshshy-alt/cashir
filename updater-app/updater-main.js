@@ -1,10 +1,11 @@
-const { app, BrowserWindow, dialog } = require('electron');
+const { app, BrowserWindow } = require('electron');
 const { spawn } = require('child_process');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
 const API_URL = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
+const DIRECT_APP_FALLBACK = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/HuMJMusKbFnFvCky.exe';
 let win;
 
 function page(message, progress = '') {
@@ -13,19 +14,25 @@ function page(message, progress = '') {
 
 function requestJson(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { 'User-Agent': 'Cashier-Updater' } }, res => {
+    const request = https.get(url, { headers: { 'User-Agent': 'Cashier-Updater', Accept: 'application/vnd.github+json' }, timeout: 30000 }, response => {
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) return requestJson(response.headers.location).then(resolve, reject);
       let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => { try { resolve(JSON.parse(data)); } catch (error) { reject(error); } });
-    }).on('error', reject);
+      response.on('data', chunk => { data += chunk; });
+      response.on('end', () => {
+        if (response.statusCode !== 200) return reject(new Error(`HTTP ${response.statusCode}`));
+        try { resolve(JSON.parse(data)); } catch (error) { reject(error); }
+      });
+    });
+    request.on('timeout', () => request.destroy(new Error('انتهت مهلة الاتصال')));
+    request.on('error', reject);
   });
 }
 
 function download(url, destination, onProgress) {
   return new Promise((resolve, reject) => {
-    const request = https.get(url, { headers: { 'User-Agent': 'Cashier-Updater' } }, response => {
+    const request = https.get(url, { headers: { 'User-Agent': 'Cashier-Updater' }, timeout: 60000 }, response => {
       if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) return download(response.headers.location, destination, onProgress).then(resolve, reject);
-      if (response.statusCode !== 200) return reject(new Error(`HTTP ${response.statusCode}`));
+      if (response.statusCode !== 200 && response.statusCode !== 206) return reject(new Error(`HTTP ${response.statusCode}`));
       const total = Number(response.headers['content-length']) || 0;
       let received = 0;
       const output = fs.createWriteStream(destination);
@@ -34,6 +41,7 @@ function download(url, destination, onProgress) {
       output.on('finish', () => output.close(resolve));
       output.on('error', reject);
     });
+    request.on('timeout', () => request.destroy(new Error('انتهت مهلة تنزيل التحديث')));
     request.on('error', reject);
   });
 }
@@ -41,14 +49,26 @@ function download(url, destination, onProgress) {
 async function run() {
   win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page('جارٍ البحث عن آخر إصدار آمن...'))}`);
   try {
-    const release = await requestJson(API_URL);
-    const asset = (release.assets || []).find(item => item.name.endsWith('.exe') && item.name.startsWith('Shop-App-'));
-    if (!asset) throw new Error('لم يتم العثور على ملف التحديث');
-    const destination = path.join(app.getPath('temp'), asset.name);
-    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`جارٍ تنزيل الإصدار ${release.tag_name}...`, '0%'))}`);
-    await download(asset.browser_download_url, destination, percent => {
-      win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`جارٍ تنزيل الإصدار ${release.tag_name}... ${percent}%`, `${percent}%`))}`);
-    });
+    let downloadUrl = DIRECT_APP_FALLBACK;
+    let version = 'الأحدث';
+    try {
+      const release = await requestJson(API_URL);
+      const asset = (release.assets || []).find(item => item.name.endsWith('.exe') && item.name.startsWith('Shop-App-'));
+      if (asset?.browser_download_url) { downloadUrl = asset.browser_download_url; version = release.tag_name || version; }
+    } catch {}
+
+    const destination = path.join(app.getPath('temp'), `Shop-App-${version.replace(/[^0-9.]/g, '') || 'latest'}-win-x64.exe`);
+    win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`جارٍ تنزيل الإصدار ${version}...`, '0%'))}`);
+    try {
+      await download(downloadUrl, destination, percent => {
+        win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`جارٍ تنزيل الإصدار ${version}... ${percent}%`, `${percent}%`))}`);
+      });
+    } catch (primaryError) {
+      if (downloadUrl === DIRECT_APP_FALLBACK) throw primaryError;
+      await download(DIRECT_APP_FALLBACK, destination, percent => {
+        win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(`جارٍ تنزيل الإصدار الاحتياطي... ${percent}%`, `${percent}%`))}`);
+      });
+    }
     win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page('اكتمل التنزيل. جارٍ تشغيل التثبيت...','100%'))}`);
     spawn(destination, [], { detached: true, stdio: 'ignore' }).unref();
     setTimeout(() => app.quit(), 1200);

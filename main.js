@@ -8,7 +8,7 @@ const isDev = !app.isPackaged;
 const APP_ORIGIN = 'file://';
 const SECURE_STORE_FILE = path.join(app.getPath('userData'), 'cashier-secure-store.json');
 const GITHUB_LATEST_API = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
-const UPDATER_RELEASE_URL = 'https://github.com/albshshy-alt/cashir/releases/latest/download/Update-Cashier-win-x64.exe';
+const UPDATER_RELEASE_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/vLgGthIfwRhyUcge.exe';
 
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;
