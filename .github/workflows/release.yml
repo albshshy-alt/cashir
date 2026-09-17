@@ -29,11 +29,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build standalone Cashier updater
+        run: npm run dist:updater -- --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish release assets
         shell: bash
         run: |
-          ls -lah release
-          gh release create "${GITHUB_REF_NAME}" release/*.exe release/*.yml release/*.blockmap \
+          ls -lah release release-updater
+          gh release create "${GITHUB_REF_NAME}" release/*.exe release/*.yml release/*.blockmap release-updater/*.exe \
             --repo "${GITHUB_REPOSITORY}" \
             --title "نظام كاشير ${GITHUB_REF_NAME}" \
             --generate-notes

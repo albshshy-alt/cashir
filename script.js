@@ -1,3 +1,23 @@
+// ===== مخزن البيانات المحلي المشفّر عبر حماية Windows =====
+const secureData = await window.secureStorage.load();
+if (Object.keys(secureData).length === 0 && localStorage.length > 0) {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    secureData[key] = localStorage.getItem(key);
+  }
+  await window.secureStorage.save(secureData);
+  localStorage.clear();
+}
+function secureGet(key) { return Object.prototype.hasOwnProperty.call(secureData, key) ? secureData[key] : null; }
+function secureSet(key, value) {
+  secureData[key] = String(value);
+  window.secureStorage.save(secureData).catch(() => {});
+}
+function secureRemove(key) {
+  delete secureData[key];
+  window.secureStorage.save(secureData).catch(() => {});
+}
+
 // ===== بيانات المنتجات =====
 let products = [
   // أضف منتجاتك من لوحة الإدارة، أو عدّل هذه القائمة مباشرة من الكود
@@ -20,11 +40,11 @@ const ADMIN_PASSWORD_HASH_KEY = "adminPasswordHash";
 const STOCK_KEY = "kashierProductStock";
 function loadJSON(key, fallback) {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = secureGet(key);
     return raw === null ? fallback : JSON.parse(raw);
   } catch { return fallback; }
 }
-function saveJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+function saveJSON(key, value) { secureSet(key, JSON.stringify(value)); }
 function loadStock() { return loadJSON(STOCK_KEY, {}); }
 function saveStock(value) { saveJSON(STOCK_KEY, value); }
 let productStock = loadStock(); // id -> non-negative quantity; missing key means not tracked
@@ -43,10 +63,10 @@ function stockLabel(product) {
 }
 
 // ===== اسم المحل (قابل للتغيير من لوحة الإدارة) =====
-function loadStoreName() { return localStorage.getItem(STORE_NAME_KEY) || ""; }
-function saveStoreName(value) { localStorage.setItem(STORE_NAME_KEY, value); }
-function loadStoreSub() { return localStorage.getItem(STORE_SUB_KEY) || ""; }
-function saveStoreSub(value) { localStorage.setItem(STORE_SUB_KEY, value); }
+function loadStoreName() { return secureGet(STORE_NAME_KEY) || ""; }
+function saveStoreName(value) { secureSet(STORE_NAME_KEY, value); }
+function loadStoreSub() { return secureGet(STORE_SUB_KEY) || ""; }
+function saveStoreSub(value) { secureSet(STORE_SUB_KEY, value); }
 
 function applyStoreIdentity() {
   const name = loadStoreName();
@@ -93,8 +113,8 @@ function saveCustomProducts(list) { saveJSON(CUSTOM_PRODUCTS_KEY, list); }
 function loadDeletedIds() { return loadJSON(DELETED_IDS_KEY, []); }
 function saveDeletedIds(list) { saveJSON(DELETED_IDS_KEY, list); }
 function nextCustomId() {
-  const current = parseInt(localStorage.getItem(NEXT_CUSTOM_ID_KEY), 10) || FIRST_CUSTOM_ID;
-  localStorage.setItem(NEXT_CUSTOM_ID_KEY, String(current + 1));
+  const current = parseInt(secureGet(NEXT_CUSTOM_ID_KEY), 10) || FIRST_CUSTOM_ID;
+  secureSet(NEXT_CUSTOM_ID_KEY, String(current + 1));
   return current;
 }
 
@@ -203,6 +223,22 @@ const updateNowBtn = document.getElementById("updateNowBtn");
 const updateLaterBtn = document.getElementById("updateLaterBtn");
 const updateProgress = document.getElementById("updateProgress");
 const updateProgressBar = updateProgress?.querySelector("span");
+const mandatoryUpdateOverlay = document.getElementById("mandatoryUpdateOverlay");
+const mandatoryUpdateMessage = document.getElementById("mandatoryUpdateMessage");
+const openUpdaterBtn = document.getElementById("openUpdaterBtn");
+let mandatoryUpdaterUrl = "";
+
+if (window.desktopUpdater) {
+  window.desktopUpdater.onRequired(({ version, updaterUrl }) => {
+    mandatoryUpdaterUrl = updaterUrl;
+    mandatoryUpdateMessage.textContent = `الإصدار ${version} متوفر. لن يفتح التطبيق قبل تثبيت التحديث.`;
+    mandatoryUpdateOverlay.hidden = false;
+    document.body.style.overflow = "hidden";
+  });
+  openUpdaterBtn.addEventListener("click", () => {
+    if (mandatoryUpdaterUrl) window.desktopUpdater.openExternal(mandatoryUpdaterUrl);
+  });
+}
 
 // إشعار التحديث داخل واجهة التطبيق.
 if (window.desktopUpdater) {
@@ -404,19 +440,19 @@ function updateCartUI() {
   });
 }
 
-// ===== تخزين الفواتير السابقة (localStorage) =====
+// ===== تخزين الفواتير السابقة (مشفّر) =====
 const HISTORY_KEY = "nasrLibraryInvoices";
 
 function loadHistory() {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    return JSON.parse(secureGet(HISTORY_KEY)) || [];
   } catch {
     return [];
   }
 }
 
 function saveHistory(list) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  secureSet(HISTORY_KEY, JSON.stringify(list));
 }
 
 function addInvoiceToHistory(invoice) {

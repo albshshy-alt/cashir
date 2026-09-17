@@ -20,6 +20,15 @@
   <div id="updateProgress" class="update-progress" hidden><span></span></div>
 </div>
 
+<div id="mandatoryUpdateOverlay" hidden style="position:fixed;inset:0;z-index:10000;background:rgba(10,14,24,.97);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;">
+  <div style="max-width:560px;background:#182235;border:1px solid #41516e;border-radius:18px;padding:36px;box-shadow:0 20px 80px rgba(0,0,0,.5);">
+    <h2 style="margin-top:0;">تحديث إلزامي لتطبيق نظام Cashier</h2>
+    <p id="mandatoryUpdateMessage">يوجد إصدار جديد. لن يفتح التطبيق قبل تثبيت التحديث.</p>
+    <p style="opacity:.8;">افتح ملف «تحديثات تطبيق نظام Cashier» واضغط عليه لإكمال التحديث تلقائيًا.</p>
+    <button id="openUpdaterBtn" class="btn-primary-small" style="font-size:16px;padding:12px 24px;">فتح ملف التحديثات</button>
+  </div>
+</div>
+
 <header class="site-header no-print">
   <div class="wrap header-inner">
     <div class="brand">
@@ -283,6 +292,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>

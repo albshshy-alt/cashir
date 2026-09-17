@@ -1,0 +1,21 @@
+appId: com.shopapp.cashier-updater
+productName: تحديثات تطبيق نظام Cashier
+artifactName: Update-Cashier-win-x64.exe
+asar: true
+files:
+  - updater-main.js
+  - icon.ico
+  - icon.png
+directories:
+  output: release-updater
+win:
+  target:
+    - nsis
+  icon: icon.ico
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: تحديثات تطبيق نظام Cashier
