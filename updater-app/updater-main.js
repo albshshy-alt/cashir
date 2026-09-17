@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const API_URL = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
-const DIRECT_APP_FALLBACK = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/HuMJMusKbFnFvCky.exe';
+const DIRECT_APP_FALLBACK = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/ASrzUEzFcgcDaWxs.exe';
 let win;
 
 function page(message, progress = '') {

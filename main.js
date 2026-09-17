@@ -1,5 +1,4 @@
 const { app, BrowserWindow, Menu, shell, session, ipcMain, safeStorage } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -8,11 +7,7 @@ const isDev = !app.isPackaged;
 const APP_ORIGIN = 'file://';
 const SECURE_STORE_FILE = path.join(app.getPath('userData'), 'cashier-secure-store.json');
 const GITHUB_LATEST_API = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
-const UPDATER_RELEASE_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/vLgGthIfwRhyUcge.exe';
-
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = true;
-autoUpdater.allowPrerelease = false;
+const UPDATER_RELEASE_URL = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/fNDRWRpSZEmfUwNo.exe';
 let mainWindow;
 
 function readSecureStore() {
@@ -54,20 +49,6 @@ function checkMandatoryUpdate() {
   request.on('error', () => {});
 }
 
-function checkForUpdates() {
-  if (!app.isPackaged) return;
-  autoUpdater.checkForUpdates().catch(() => {});
-}
-
-autoUpdater.on('update-available', (info) => {
-  mainWindow?.webContents.send('updater:available', { version: info.version });
-});
-autoUpdater.on('download-progress', (progress) => {
-  mainWindow?.webContents.send('updater:progress', { percent: progress.percent });
-});
-autoUpdater.on('update-downloaded', () => mainWindow?.webContents.send('updater:downloaded'));
-autoUpdater.on('error', (error) => mainWindow?.webContents.send('updater:error', error.message));
-
 function createWindow() {
   const win = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1024, minHeight: 680,
@@ -99,16 +80,12 @@ app.whenReady().then(() => {
   session.defaultSession.webRequest.onBeforeRequest({ urls: ['file://*/*'] }, (details, callback) => {
     callback({ cancel: !details.url.startsWith(APP_ORIGIN) });
   });
-  ipcMain.on('updater:check', () => checkForUpdates());
-  ipcMain.on('updater:download', () => autoUpdater.downloadUpdate().catch(() => {}));
-  ipcMain.on('updater:install', () => autoUpdater.quitAndInstall(false, true));
   ipcMain.on('updater:open-external', (_event, url) => {
     if (url === UPDATER_RELEASE_URL) shell.openExternal(url);
   });
   ipcMain.handle('secure-storage:load', () => readSecureStore());
   ipcMain.handle('secure-storage:save', (_event, values) => { writeSecureStore(values); return true; });
   createWindow();
-  setTimeout(checkForUpdates, 5000);
   setTimeout(checkMandatoryUpdate, 2500);
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
