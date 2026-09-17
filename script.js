@@ -51,23 +51,25 @@ function saveStoreSub(value) { localStorage.setItem(STORE_SUB_KEY, value); }
 function applyStoreIdentity() {
   const name = loadStoreName();
   const sub = loadStoreSub();
-  const mark = name ? name.trim().charAt(0) : "";
+  const displayName = name || "نظام كاشير";
+  const displaySub = sub || "إدارة المبيعات والمخزون";
+  const mark = displayName.trim().charAt(0);
 
-  document.title = [name, sub].filter(Boolean).join(" - ");
+  document.title = [displayName, sub].filter(Boolean).join(" - ");
 
   const brandMark = document.getElementById("brandMark");
   const brandName = document.getElementById("brandName");
   const brandSub = document.getElementById("brandSub");
   if (brandMark) brandMark.textContent = mark;
-  if (brandName) brandName.textContent = name;
-  if (brandSub) brandSub.textContent = sub;
+  if (brandName) brandName.textContent = displayName;
+  if (brandSub) brandSub.textContent = displaySub;
 
   const invoiceMark = document.getElementById("invoiceMark");
   const invoiceBrandName = document.getElementById("invoiceBrandName");
   const invoiceBrandSub = document.getElementById("invoiceBrandSub");
   if (invoiceMark) invoiceMark.textContent = mark;
-  if (invoiceBrandName) invoiceBrandName.textContent = name;
-  if (invoiceBrandSub) invoiceBrandSub.textContent = sub;
+  if (invoiceBrandName) invoiceBrandName.textContent = displayName;
+  if (invoiceBrandSub) invoiceBrandSub.textContent = displaySub;
 
   const footerLine = document.getElementById("footerLine");
   if (footerLine) {

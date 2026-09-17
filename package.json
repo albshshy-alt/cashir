@@ -1,6 +1,6 @@
 {
   "name": "shop-app-desktop",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "تطبيق إدارة ومبيعات المتجر باللغة العربية",
   "main": "main.js",
   "author": "Yusuf elbeses",
@@ -28,9 +28,7 @@
       "preload.js",
       "COPYRIGHT-Yusuf-elbeses.txt",
       "icon.*",
-      "icon-source.png",
-      "افتح البرنامج.bat",
-      "انشئ اختصار على سطح المكتب.vbs"
+      "icon-source.png"
     ],
     "directories": {
       "output": "release"
