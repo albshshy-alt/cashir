@@ -229,6 +229,19 @@ const openUpdaterBtn = document.getElementById("openUpdaterBtn");
 let mandatoryUpdaterUrl = "";
 
 if (window.desktopUpdater) {
+  window.desktopUpdater.onNone(() => {
+    updateTitle.textContent = "لا يوجد تحديث جديد";
+    updateMessage.textContent = "أنت تستخدم أحدث إصدار من نظام Cashier.";
+    updateNowBtn.hidden = true;
+    updateLaterBtn.hidden = true;
+    updateProgress.hidden = true;
+    updateBanner.hidden = false;
+    window.setTimeout(() => {
+      updateBanner.hidden = true;
+      updateNowBtn.hidden = false;
+      updateLaterBtn.hidden = false;
+    }, 4500);
+  });
   window.desktopUpdater.onRequired(({ version, updaterUrl }) => {
     mandatoryUpdaterUrl = updaterUrl;
     mandatoryUpdateMessage.textContent = `الإصدار ${version} متوفر. لن يفتح التطبيق قبل تثبيت التحديث.`;

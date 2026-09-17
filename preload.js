@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('desktopUpdater', {
   openExternal: (url) => ipcRenderer.send('updater:open-external', url),
   onAvailable: (callback) => ipcRenderer.on('updater:available', (_event, info) => callback(info)),
   onRequired: (callback) => ipcRenderer.on('updater:required', (_event, info) => callback(info)),
+  onNone: (callback) => ipcRenderer.on('updater:none', (_event, info) => callback(info)),
   onProgress: (callback) => ipcRenderer.on('updater:progress', (_event, progress) => callback(progress)),
   onDownloaded: (callback) => ipcRenderer.on('updater:downloaded', () => callback()),
   onError: (callback) => ipcRenderer.on('updater:error', (_event, message) => callback(message))

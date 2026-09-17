@@ -6,8 +6,8 @@ const path = require('path');
 const crypto = require('crypto');
 
 const API_URL = 'https://api.github.com/repos/albshshy-alt/cashir/releases/latest';
-const DIRECT_APP_FALLBACK = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/wxyvwakUIOTUwzkO.exe';
-const DIRECT_APP_FALLBACK_SHA256 = 'c6683b24d256627fa6677a73697ff20015d0a6b49ac55bb788c058a155ab288d';
+const DIRECT_APP_FALLBACK = 'https://files.manuscdn.com/user_upload_by_module/session_file/310519663936195933/vKqGIFdVoSfZGPPu.exe';
+const DIRECT_APP_FALLBACK_SHA256 = 'a3d4627058cdcbf2e72fe51a995bda08b22ffa0e3e2729486646c330ca3877a4';
 let win;
 
 function page(message, progress = '') {
