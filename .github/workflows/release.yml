@@ -40,7 +40,7 @@ jobs:
           ls -lah release release-updater
           gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" \
             --title "نظام كاشير ${GITHUB_REF_NAME}" --generate-notes --draft
-          gh release upload "${GITHUB_REF_NAME}" release/*.exe release/*.yml release/*.blockmap release-updater/*.exe \
+          gh release upload "${GITHUB_REF_NAME}" release/*.exe release/*.yml release-updater/*.exe \
             --repo "${GITHUB_REPOSITORY}" --clobber
           gh release edit "${GITHUB_REF_NAME}" \
             --repo "${GITHUB_REPOSITORY}" \
