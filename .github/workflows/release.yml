@@ -40,8 +40,15 @@ jobs:
           ls -lah release release-updater
           gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" \
             --title "نظام كاشير ${GITHUB_REF_NAME}" --generate-notes --draft
-          gh release upload "${GITHUB_REF_NAME}" release/*.exe release/*.yml release-updater/*.exe \
-            --repo "${GITHUB_REPOSITORY}" --clobber
+          for asset in release/*.exe release/*.yml release-updater/*.exe; do
+            for attempt in 1 2 3 4 5; do
+              if gh release upload "${GITHUB_REF_NAME}" "$asset" --repo "${GITHUB_REPOSITORY}" --clobber; then
+                break
+              fi
+              echo "Upload attempt ${attempt} failed for ${asset}; retrying..."
+              sleep 15
+            done
+          done
           gh release edit "${GITHUB_REF_NAME}" \
             --repo "${GITHUB_REPOSITORY}" \
             --title "نظام كاشير ${GITHUB_REF_NAME}" \
