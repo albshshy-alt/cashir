@@ -1,5 +1,6 @@
 appId: com.shopapp.cashier-updater
 productName: تحديثات تطبيق نظام Cashier
+electronVersion: 44.3.0
 artifactName: Update-Cashier-win-x64.exe
 asar: true
 files:

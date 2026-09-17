@@ -1,0 +1,8 @@
+{
+  "name": "cashier-updater",
+  "version": "1.0.16",
+  "description": "تحديثات تطبيق نظام Cashier",
+  "main": "updater-main.js",
+  "author": "Yusuf elbeses",
+  "license": "UNLICENSED"
+}
